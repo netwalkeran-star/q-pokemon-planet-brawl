@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <title>寶可夢小行星・大亂鬥攻城生存 Brawl</title>
+    <link rel="stylesheet" href="./brawl.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "canvas-confetti": "https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/+esm"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="game-container"></div>
+
+    <!-- Top Energy / Fever Progress Bar -->
+    <div id="xp-bar-wrap">
+      <div id="xp-bar-fill" style="width: 0%;"></div>
+      <span id="xp-level-badge">能量狂熱 0%</span>
+    </div>
+
+    <!-- 3-Zone Top HUD: Left (City/Squad) | Center (Captured Buildings / Kills / Coins) | Right (Controls) -->
+    <div id="hud-top">
+      <div class="hud-zone hud-zone-left">
+        <div class="hud-item stage-item">
+          <span id="stage-title">🏙️ 台北 (第1關)</span>
+        </div>
+        <div class="hud-item player-item" id="hud-hero-badge">
+          <span id="hud-poke-icon">⚡</span>
+          <span id="hud-squad-text">10/10 隻</span>
+        </div>
+      </div>
+
+      <div class="hud-zone hud-zone-center">
+        <div class="hud-scoreboard">
+          <div class="sb-metric sb-capture" title="已攻佔建築砲台">
+            <svg class="hud-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 21V7l8-4 8 4v14"/>
+              <path d="M9 21v-6h6v6"/>
+            </svg>
+            <b id="capture-count">0/13</b>
+          </div>
+          <div class="sb-divider"></div>
+          <div class="sb-metric sb-kills" title="擊倒動物殭屍">
+            <svg class="hud-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M14.5 4.5L19.5 9.5M4 20l5-1 10-10-4-4L5 15l-1 5z"/>
+            </svg>
+            <b id="kill-count">0</b>
+          </div>
+          <div class="sb-divider"></div>
+          <div class="sb-metric sb-coins" title="積分">
+            <svg class="hud-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+            <b id="score-count">0</b>
+          </div>
+        </div>
+      </div>
+
+      <div class="hud-zone hud-zone-right">
+        <button class="hud-item icon-btn" id="hud-fullscreen-btn" title="切換全螢幕">
+          <svg class="hud-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+          </svg>
+        </button>
+        <button class="hud-item icon-btn" id="hud-sound-btn" title="切換音效靜音">
+          <svg id="svg-sound-on" class="hud-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+          </svg>
+          <svg id="svg-sound-off" class="hud-svg hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <line x1="23" y1="9" x2="17" y2="15"/>
+            <line x1="17" y1="9" x2="23" y2="15"/>
+          </svg>
+        </button>
+        <button class="hud-item icon-btn" id="hud-pause-btn" title="暫停 / 設定">
+          <svg class="hud-svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <rect x="6" y="4" width="4" height="16" rx="1.5"/>
+            <rect x="14" y="4" width="4" height="16" rx="1.5"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Weapon & Essence Status Strip (Top-Left below HUD) -->
+    <div id="weapon-status-bar">
+      <div class="ws-pill" id="ws-active-weapon">🌀 迴旋星環刃 Lv.1</div>
+      <div class="ws-pill" id="ws-power">🔥 火力 100%</div>
+      <div class="ws-pill" id="ws-speed">⚡ 攻速 100%</div>
+    </div>
+
+    <!-- Building Siege Progress HUD (Appears when near an uncaptured landmark) -->
+    <div id="siege-hud" class="hidden">
+      <div class="siege-header">
+        <span id="siege-name">🏛️ 攻佔建築中...</span>
+        <span id="siege-hp-text">450 / 450</span>
+      </div>
+      <div class="siege-hp-track">
+        <div id="siege-hp-fill" style="width: 100%;"></div>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="brawl-toast" class="brawl-toast hidden"></div>
+
+    <!-- Player HP Bar (Bottom Center) -->
+    <div id="player-hp-hud">
+      <div class="hp-track">
+        <div id="player-hp-fill" style="width: 100%;"></div>
+        <span id="player-hp-text">100 / 100 HP (10 隻)</span>
+      </div>
+    </div>
+
+    <!-- 💻 PC Mode Bottom-Right Pure White SVG Frosted-Glass Keybind Dock -->
+    <div id="hud-bottom" class="pc-keybind-dock">
+      <div class="pc-move-hint">WASD / 方向鍵移動・走近建築攻佔變砲台</div>
+      <div class="pc-action-row">
+        <button id="btn-dash" class="btn-ctrl glass-action-btn" title="極速閃避衝刺 (Shift)">
+          <svg class="action-svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M13 2L4.5 13.5h6L9.5 22l9.5-12h-6L13 2z"/>
+          </svg>
+          <span class="btn-label">衝刺</span>
+          <kbd class="keycap">Shift</kbd>
+          <span id="pc-dash-cd" class="pc-cd-badge hidden">3s</span>
+        </button>
+        <button id="btn-skill" class="btn-ctrl glass-action-btn" title="全隊奧義震波 (Space)">
+          <svg class="action-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M14.5 4.5L19.5 9.5M4 20l5-1 10-10-4-4L5 15l-1 5z"/>
+            <path d="M12 2v3M22 12h-3M19 5l-1.5 1.5"/>
+          </svg>
+          <span class="btn-label">奧義</span>
+          <kbd class="keycap">Space</kbd>
+          <span id="pc-skill-cd" class="pc-cd-badge hidden">6s</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 📱 Mobile Landscape Mode: 1.5X Translucent Joystick + Pure White SVG Glass Pad -->
+    <div id="mobile-controls" class="hidden">
+      <div id="joystick-zone">
+        <div id="joystick-base">
+          <div class="joy-arrow joy-up">▲</div>
+          <div class="joy-arrow joy-down">▼</div>
+          <div class="joy-arrow joy-left">◀</div>
+          <div class="joy-arrow joy-right">▶</div>
+          <div id="joystick-stick">
+            <svg class="joy-center-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="4"/>
+              <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+            </svg>
+          </div>
+        </div>
+        <div class="joystick-label">滑動搖桿自由移動</div>
+      </div>
+
+      <div id="mobile-action-pad">
+        <button id="btn-mob-dash" class="mob-btn mob-btn-dash" title="極速閃避衝刺">
+          <svg class="mob-svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M13 2L4.5 13.5h6L9.5 22l9.5-12h-6L13 2z"/>
+          </svg>
+          <span class="mob-text">衝刺</span>
+          <span id="mob-dash-cd" class="mob-cd-overlay hidden">3</span>
+        </button>
+        <button id="btn-mob-skill" class="mob-btn mob-btn-skill" title="全隊奧義震波">
+          <svg class="mob-svg mob-svg-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M14.5 4.5L19.5 9.5M4 20l5-1 10-10-4-4L5 15l-1 5z"/>
+            <path d="M12 2v3M22 12h-3"/>
+          </svg>
+          <span class="mob-text">奧義</span>
+          <span id="mob-skill-cd" class="mob-cd-overlay hidden">6</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Start / Setup Modal -->
+    <div id="start-modal" class="modal-overlay">
+      <div class="modal-card glass-card">
+        <div class="hero-badge">SURVIVOR BRAWL · 3D 小行星攻城戰</div>
+        <h1 class="start-hero-title">寶可夢小行星・大亂鬥</h1>
+        <p class="start-subtitle">10 隻主角連線出戰！擊殺建築湧出的動物殭屍、吃精華升級武器、攻佔全數 13 座建築變砲台即可過關！</p>
+
+        <!-- City Asteroid Selector -->
+        <div class="selector-section">
+          <div class="section-label">起始關卡</div>
+          <div class="pill-group" id="stage-selector">
+            <button class="pill-btn active" data-stage="1">1. 🏙️ 台北</button>
+            <button class="pill-btn" data-stage="2">2. ⛩️ 京都</button>
+            <button class="pill-btn" data-stage="3">3. 🥮 上海</button>
+          </div>
+        </div>
+
+        <!-- 6 Pokemon Selector -->
+        <div class="selector-section">
+          <div class="section-label">選擇出戰寶可夢 (開局 100 HP = 10 隻連線)</div>
+          <div class="poke-grid" id="poke-selector">
+            <button class="poke-btn active" data-species="pikachu">⚡ 皮卡丘</button>
+            <button class="poke-btn" data-species="charmander">🔥 小火龍</button>
+            <button class="poke-btn" data-species="squirtle">💧 傑尼龜</button>
+            <button class="poke-btn" data-species="bulbasaur">🌱 妙蛙種子</button>
+            <button class="poke-btn" data-species="gengar">👻 耿鬼</button>
+            <button class="poke-btn" data-species="falinks">🦊 伊布</button>
+          </div>
+        </div>
+
+        <!-- Control Mode Toggle -->
+        <div class="selector-section">
+          <div class="section-label">操作介面模式</div>
+          <div class="pill-group" id="device-selector">
+            <button class="pill-btn active" data-device="auto">✨ 自動偵測</button>
+            <button class="pill-btn" data-device="pc">💻 電腦鍵鼠</button>
+            <button class="pill-btn" data-device="mobile">📱 手機搖桿 (1.5X)</button>
+          </div>
+        </div>
+
+        <button id="btn-start-brawl" class="btn-primary-glass">
+          <span>開始攻城大亂鬥</span>
+          <svg class="btn-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 12h14M13 5l7 7-7 7"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Stage Clear / Game Over Result Modal -->
+    <div id="result-modal" class="modal-overlay hidden">
+      <div class="modal-card glass-card">
+        <div class="hero-badge" id="result-badge">STAGE CLEAR</div>
+        <h2 class="start-hero-title" id="result-title">🎉 台北小行星全面攻佔！</h2>
+        <p class="start-subtitle" id="result-desc">全部 13 座建築已轉化為我方砲台！</p>
+        <div class="result-stats-box">
+          <div class="r-stat"><span>擊倒殭屍</span><b id="res-kills">0</b></div>
+          <div class="r-stat"><span>目前隊伍上限</span><b id="res-maxhp">100 HP</b></div>
+          <div class="r-stat"><span>總積分</span><b id="res-score">0</b></div>
+        </div>
+        <button id="btn-result-action" class="btn-primary-glass">
+          <span id="btn-result-text">前往第 2 關：京都小行星</span>
+          <svg class="btn-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 12h14M13 5l7 7-7 7"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Weapon Swap Confirmation Modal (Pauses game & inherits effect ratios) -->
+    <div id="weapon-swap-modal" class="modal-overlay hidden">
+      <div class="modal-card glass-card">
+        <div class="hero-badge">WEAPON DROP · 遊戲已暫停</div>
+        <h2 class="start-hero-title">拾獲新武器！是否更換？</h2>
+        <p class="start-subtitle" id="swap-inherit-note">更換後將完整繼承目前的火力、攻速與武器階級比例</p>
+        <div class="weapon-compare-box">
+          <div class="wc-col">
+            <span class="wc-label">目前裝備</span>
+            <b id="swap-cur-name">🌀 迴旋星環刃</b>
+          </div>
+          <div class="wc-arrow">➔</div>
+          <div class="wc-col wc-col-new">
+            <span class="wc-label">新拾獲武器</span>
+            <b id="swap-new-name">⚡ 追蹤雷羽鏢</b>
+          </div>
+        </div>
+        <div class="swap-btn-row">
+          <button id="btn-swap-keep" class="btn-secondary-glass">❌ 保留原武器</button>
+          <button id="btn-swap-confirm" class="btn-primary-glass" style="margin-top:0;">✅ 確認更換</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
