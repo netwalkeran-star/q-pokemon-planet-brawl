@@ -1,0 +1,2217 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>怪獸電力公司・三大精緻副本 3D 試玩平台（橫屏專屬）</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden !important;
+      position: fixed;
+      top: 0;
+      left: 0;
+      background: #87ceeb; /* Bright Sunny Daytime Sky (matching main game) */
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft JhengHei", sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+    #game-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* Top Compact Header for Landscape */
+    .dungeon-header {
+      position: absolute;
+      top: 8px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      z-index: 20;
+      pointer-events: none;
+    }
+    .hud-chip {
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(12px);
+      border: 1.5px solid rgba(56, 189, 248, 0.45);
+      padding: 4px 10px;
+      border-radius: 99px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+      pointer-events: auto;
+      font-size: 11.5px;
+    }
+    .hud-title {
+      font-weight: 800;
+      color: #38bdf8;
+    }
+    .counter-badge {
+      background: #10b981;
+      color: #000;
+      font-weight: 900;
+      font-size: 11.5px;
+      padding: 1px 6px;
+      border-radius: 5px;
+    }
+    .btn-sound {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 99px;
+      font-size: 11.5px;
+      cursor: pointer;
+      pointer-events: auto;
+    }
+    .btn-gear {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: #38bdf8;
+      padding: 4px 10px;
+      border-radius: 99px;
+      font-size: 11.5px;
+      font-weight: 800;
+      cursor: pointer;
+      pointer-events: auto;
+    }
+
+    /* Compact Tabs Bar (Horizontal Scrollable in Landscape) */
+    .dungeon-tabs-bar {
+      position: absolute;
+      top: 42px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      gap: 6px;
+      z-index: 20;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .dungeon-tabs-bar::-webkit-scrollbar { display: none; }
+    .dtab-btn {
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: #cbd5e1;
+      padding: 4px 10px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+    .dtab-btn:hover { border-color: #38bdf8; }
+    .dtab-btn.active {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      border-color: #38bdf8;
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(56, 189, 248, 0.5);
+    }
+
+    /* Left Landscape Controls: D-Pad / Joystick */
+    #mobile-joy {
+      position: absolute;
+      bottom: 12px;
+      left: 14px;
+      width: 95px;
+      height: 95px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.12);
+      border: 2px dashed rgba(255, 255, 255, 0.35);
+      z-index: 30;
+      touch-action: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #joy-stick {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #38bdf8, #0284c7);
+      box-shadow: 0 4px 12px rgba(56, 189, 248, 0.6);
+      pointer-events: none;
+      transform: translate(0px, 0px);
+    }
+
+    #mobile-dpad {
+      position: absolute;
+      bottom: 10px;
+      left: 12px;
+      width: 105px;
+      height: 105px;
+      z-index: 30;
+      display: block;
+    }
+    .dpad-btn {
+      position: absolute;
+      width: 34px;
+      height: 34px;
+      background: rgba(30, 41, 59, 0.9);
+      border: 1.5px solid #38bdf8;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .dpad-up    { top: 0; left: 35px; }
+    .dpad-down  { bottom: 0; left: 35px; }
+    .dpad-left  { top: 35px; left: 0; }
+    .dpad-right { top: 35px; right: 0; }
+
+    /* Right Landscape Actions (Jump) */
+    #mobile-actions {
+      position: absolute;
+      bottom: 14px;
+      right: 14px;
+      display: flex;
+      gap: 10px;
+      z-index: 30;
+    }
+    .act-btn {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      color: #fff;
+      font-size: 11.5px;
+      font-weight: 800;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+      touch-action: none;
+    }
+    .btn-jump { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+    .act-btn:active { transform: scale(0.92); }
+
+    /* Collapsible Character / Hat Drawer (No Page Scroll) */
+    .character-drawer {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(88vw, 560px);
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 14px;
+      padding: 6px 10px;
+      z-index: 35;
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.8);
+    }
+    .character-drawer.show { display: flex; }
+    .row-scroll {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .row-scroll::-webkit-scrollbar { display: none; }
+    .chip-btn {
+      background: rgba(30, 41, 59, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #e2e8f0;
+      padding: 3px 8px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+    .chip-btn:hover { border-color: #38bdf8; }
+    .chip-btn.active {
+      background: linear-gradient(135deg, #0ea5e9, #0284c7);
+      border-color: #38bdf8;
+      color: #fff;
+    }
+
+    /* Modals (No Page Overflow) */
+    .overlay-modal {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(3, 7, 18, 0.86);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      padding: 12px;
+    }
+    .modal-card {
+      background: rgba(15, 23, 42, 0.96);
+      border: 2px solid #38bdf8;
+      border-radius: 20px;
+      padding: 16px 20px;
+      max-width: 440px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      text-align: center;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.8);
+    }
+    .modal-icon { font-size: 36px; margin-bottom: 4px; }
+    .modal-card h2 { font-size: 18px; color: #38bdf8; margin-bottom: 6px; }
+    .modal-card p { font-size: 12.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 14px; }
+    .btn-hero {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      width: 100%;
+      box-shadow: 0 6px 18px rgba(16, 185, 129, 0.45);
+      transition: transform 0.15s ease;
+    }
+    .btn-hero:active { transform: scale(0.96); }
+    .btn-fail {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      box-shadow: 0 6px 18px rgba(239, 68, 68, 0.45);
+    }
+    .hidden { display: none !important; }
+
+    /* Toast */
+    #toast {
+      position: absolute;
+      top: 76px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid #38bdf8;
+      padding: 6px 14px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #f8fafc;
+      z-index: 40;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+      transition: all 0.3s ease;
+      opacity: 0;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    #toast.show { opacity: 1; transform: translate(-50%, 4px); }
+  </style>
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+  <!-- Top HUD (Single line, strictly fitting landscape mobile) -->
+  <div class="dungeon-header">
+    <div class="hud-chip">
+      <span class="hud-title" id="hud-dungeon-name">🐍 副本 1：經典貪吃蛇</span>
+    </div>
+    <div class="hud-chip">
+      <span id="hud-goal-label">🟡 豆豆進度：</span><b class="counter-badge" id="hud-counter">0 / 10 顆</b>
+    </div>
+    <button class="btn-sound" id="btn-toggle-invert" style="display:none; background:rgba(30,41,59,0.9); border:1px solid #f59e0b; color:#fef08a;">🔄 左右：已反轉</button>
+    <button class="btn-gear" id="btn-toggle-gear">⚙️ 換角與魔帽</button>
+    <button class="btn-sound" id="btn-sound-toggle">🔊 音效</button>
+    <button class="btn-sound" id="btn-return-main" style="background:rgba(239,68,68,0.85); border:1px solid #ef4444; color:#fff; display:none;">🚪 返回主遊戲</button>
+  </div>
+
+  <!-- Tabs Bar (Horizontal scrolling without page overflow) -->
+  <div class="dungeon-tabs-bar" id="dungeon-tabs">
+    <button class="dtab-btn active" data-mode="snake">🐍 副本 1：經典貪吃蛇（小範圍0.68X・吃10顆出魔帽）</button>
+    <button class="dtab-btn" data-mode="runner">🏃 副本 2：橫幅跳躍吃星星（慢速0.8X・避開負星）</button>
+    <button class="dtab-btn" data-mode="maze">🧭 副本 3：精緻滾動迷宮（4個出口・僅一門有真寶）</button>
+  </div>
+
+  <div id="toast">歡迎來到怪獸電力公司特色副本！</div>
+  <canvas id="game-canvas"></canvas>
+
+  <!-- Left Mobile Controls -->
+  <div id="mobile-joy" style="display:none;">
+    <div id="joy-stick"></div>
+  </div>
+  <div id="mobile-dpad">
+    <button class="dpad-btn dpad-up" id="btn-dp-up">▲</button>
+    <button class="dpad-btn dpad-down" id="btn-dp-down">▼</button>
+    <button class="dpad-btn dpad-left" id="btn-dp-left">◀</button>
+    <button class="dpad-btn dpad-right" id="btn-dp-right">▶</button>
+  </div>
+
+  <!-- Right Mobile Controls -->
+  <div id="mobile-actions" style="display:none;">
+    <button class="act-btn btn-jump" id="btn-mobile-jump">🦘<span>跳躍</span></button>
+  </div>
+
+  <!-- Collapsible Drawer for Characters & Hats -->
+  <div class="character-drawer" id="char-drawer">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-size:10.5px; font-weight:800; color:#94a3b8;">1. 角色選擇（僅首節戴帽）：</span>
+      <button class="chip-btn" id="btn-close-drawer" style="padding:1px 6px;">✕ 關閉</button>
+    </div>
+    <div class="row-scroll" id="row-chars">
+      <button class="chip-btn active" data-char="pikachu">⚡ 皮卡丘</button>
+      <button class="chip-btn" data-char="charmander">🔥 小火龍</button>
+      <button class="chip-btn" data-char="squirtle">💧 傑尼龜</button>
+      <button class="chip-btn" data-char="gengar">👻 耿鬼</button>
+      <button class="chip-btn" data-char="falinks">🦊 伊布</button>
+    </div>
+    <span style="font-size:10.5px; font-weight:800; color:#94a3b8;">2. 挑戰目標怪獸魔帽：</span>
+    <div class="row-scroll" id="row-capes">
+      <button class="chip-btn active" data-cape="sulley">🩵 毛怪角角帽 (+25%防禦)</button>
+      <button class="chip-btn" data-cape="mike">💚 大眼仔安全帽 (+50%吸寶)</button>
+      <button class="chip-btn" data-cape="boo">🌸 阿布萌帽 (+30%成長)</button>
+      <button class="chip-btn" data-cape="randall">🦎 藍道戰冠 (10s隱身)</button>
+    </div>
+  </div>
+
+  <!-- Start Intro Modal -->
+  <div class="overlay-modal" id="start-modal">
+    <div class="modal-card">
+      <div class="modal-icon" id="start-modal-icon">🐍</div>
+      <h2 id="start-modal-title">副本 1：經典貪吃蛇</h2>
+      <p id="start-modal-desc">
+        【純粹經典貪吃蛇・場地縮小 0.68X 好掌控】！<br>
+        場上散落著 <b>18 顆發光能量豆</b>，蛇身走速適中。<br>
+        當吃滿 <b>10 顆能量豆</b> 時，場上將<b>隨機降臨怪獸魔帽</b>！<br>
+        蛇頭<b>有吃到就有</b>直接獲勝帶走！撞牆或咬到自己身體則失敗退出。
+      </p>
+      <button class="btn-hero" id="btn-start-challenge">🚀 立即進入副本・開始挑戰！</button>
+    </div>
+  </div>
+
+  <!-- Victory / Game Over Modal -->
+  <div class="overlay-modal hidden" id="result-modal">
+    <div class="modal-card">
+      <div class="modal-icon" id="res-icon">🎉</div>
+      <h2 id="res-title">副本大獲全勝！</h2>
+      <p id="res-desc">恭喜成功吃到限定道具！</p>
+      <button class="btn-hero" id="btn-res-action">🎩 穿戴道具・繼續暢遊</button>
+      <button class="chip-btn" id="btn-res-retry" style="width:100%; padding:8px; border-radius:10px; margin-top:6px;">🔄 再次挑戰本副本</button>
+    </div>
+  </div>
+
+  <script>
+    // --- Web Audio Synthesizer ---
+    class TrialSound {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+      }
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) this.ctx = new AudioContext();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+      playNote(freq, start, dur, type = 'sine', gainVal = 0.22) {
+        if (this.muted || !this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, start);
+        gain.gain.setValueAtTime(gainVal, start);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(start);
+        osc.stop(start + dur);
+      }
+      playCollect() {
+        if (this.muted || !this.ctx) return;
+        const t = this.ctx.currentTime;
+        this.playNote(880, t, 0.08, 'sine', 0.22);
+        this.playNote(1318.5, t + 0.05, 0.16, 'sine', 0.22);
+      }
+      playPoison() {
+        if (this.muted || !this.ctx) return;
+        const t = this.ctx.currentTime;
+        this.playNote(260, t, 0.15, 'sawtooth', 0.26);
+        this.playNote(180, t + 0.08, 0.2, 'sawtooth', 0.28);
+      }
+      playVictory() {
+        if (this.muted || !this.ctx) return;
+        const t = this.ctx.currentTime;
+        [523.25, 659.25, 783.99, 1046.50, 1318.51, 1567.98].forEach((freq, idx) => {
+          this.playNote(freq, t + idx * 0.07, 0.32, 'triangle', 0.28);
+        });
+      }
+      playFail() {
+        if (this.muted || !this.ctx) return;
+        const t = this.ctx.currentTime;
+        this.playNote(300, t, 0.18, 'sawtooth', 0.28);
+        this.playNote(200, t + 0.12, 0.3, 'sawtooth', 0.32);
+      }
+      playJump() {
+        if (this.muted || !this.ctx) return;
+        const t = this.ctx.currentTime;
+        this.playNote(480, t, 0.07, 'sine', 0.16);
+        this.playNote(720, t + 0.04, 0.14, 'sine', 0.16);
+      }
+    }
+    const sound = new TrialSound();
+
+    // --- Three.js Scene Setup (Bright Sunny Daytime City Style / 城市明亮風格) ---
+    const canvas = document.getElementById('game-canvas');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x87ceeb);
+    scene.fog = new THREE.Fog(0x87ceeb, 80, 240);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 350);
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.22;
+
+    // Bright Sunny Lighting (White sky + Lush Green ground bounce + Warm Golden Sunlight)
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x62a630, 1.25);
+    scene.add(hemiLight);
+
+    const dirLight = new THREE.DirectionalLight(0xfff9e6, 2.2);
+    dirLight.position.set(40, 75, 40);
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.width = 1024;
+    dirLight.shadow.mapSize.height = 1024;
+    dirLight.shadow.camera.near = 10;
+    dirLight.shadow.camera.far = 180;
+    const shadowBound = 45;
+    dirLight.shadow.camera.left = -shadowBound;
+    dirLight.shadow.camera.right = shadowBound;
+    dirLight.shadow.camera.top = shadowBound;
+    dirLight.shadow.camera.bottom = -shadowBound;
+    dirLight.shadow.bias = -0.0005;
+    scene.add(dirLight);
+
+    const rimLight = new THREE.DirectionalLight(0x90e0ef, 0.65);
+    rimLight.position.set(-50, 30, -50);
+    scene.add(rimLight);
+
+    // City Environment Backdrop Group (Persistent across worldGroup clears)
+    const cityEnvGroup = new THREE.Group();
+    scene.add(cityEnvGroup);
+
+    // Procedural City Environment Generator (Skyscrapers, Clouds, Trees, Park Grass)
+    function updateCityEnvironment(mode) {
+      while (cityEnvGroup.children.length > 0) {
+        cityEnvGroup.remove(cityEnvGroup.children[0]);
+      }
+
+      // 1. Low-poly Fluffy Clouds drifting in the Sunny Sky
+      const cloudMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85, flatShading: true });
+      function addFluffyCloud(cx, cy, cz, scale = 1.0) {
+        const cg = new THREE.Group();
+        cg.userData.isCloud = true;
+        const parts = [
+          { r: 2.4, x: 0, y: 0, z: 0 },
+          { r: 1.8, x: -1.8, y: -0.2, z: 0 },
+          { r: 1.9, x: 1.8, y: 0.1, z: 0 },
+          { r: 1.5, x: 0.5, y: 1.2, z: 0.4 },
+          { r: 1.4, x: -0.9, y: 1.0, z: -0.3 }
+        ];
+        parts.forEach(p => {
+          const m = new THREE.Mesh(new THREE.DodecahedronGeometry(p.r * scale, 1), cloudMat);
+          m.position.set(p.x * scale, p.y * scale, p.z * scale);
+          cg.add(m);
+        });
+        cg.position.set(cx, cy, cz);
+        cityEnvGroup.add(cg);
+      }
+
+      // 2. Stylized Park Trees (Round green crowns + wooden trunks)
+      const trunkMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.8 });
+      const leavesMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.6, flatShading: true });
+      function addParkTree(tx, tz, scale = 1.0) {
+        const tg = new THREE.Group();
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.25 * scale, 0.35 * scale, 1.8 * scale, 8), trunkMat);
+        trunk.position.y = 0.9 * scale;
+        trunk.castShadow = true;
+        tg.add(trunk);
+        const crown = new THREE.Mesh(new THREE.DodecahedronGeometry(1.5 * scale, 1), leavesMat);
+        crown.position.y = 2.2 * scale;
+        crown.castShadow = true;
+        tg.add(crown);
+        tg.position.set(tx, 0, tz);
+        cityEnvGroup.add(tg);
+      }
+
+      // 3. Modern City Skyscraper Builder (Sunny City Palette: Glass Sky Blue, White Stone, Ochre, Coral)
+      const buildingColors = [
+        { base: 0x38bdf8, isGlass: true },  // Modern Sky Glass
+        { base: 0xf8fafc, isGlass: false }, // Crisp White Architectural Stone
+        { base: 0xfbbf24, isGlass: false }, // Warm Sunny Ochre
+        { base: 0xf87171, isGlass: false }, // Terracotta Townhouse
+        { base: 0x34d399, isGlass: true },  // Emerald Glass Tower
+        { base: 0x818cf8, isGlass: true },  // Lavender Glass
+        { base: 0x94a3b8, isGlass: false }  // Cool Urban Granite
+      ];
+
+      function addBuilding(bx, bz, bw, bd, bh, colorDef) {
+        const bg = new THREE.Group();
+        const bMat = new THREE.MeshStandardMaterial({
+          color: colorDef.base,
+          roughness: colorDef.isGlass ? 0.2 : 0.65,
+          metalness: colorDef.isGlass ? 0.35 : 0.06
+        });
+        const bMesh = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, bd), bMat);
+        bMesh.position.y = bh / 2;
+        bMesh.castShadow = true;
+        bMesh.receiveShadow = true;
+        bg.add(bMesh);
+
+        // Roof parapet
+        const roofMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.8 });
+        const roof = new THREE.Mesh(new THREE.BoxGeometry(bw + 0.3, 0.4, bd + 0.3), roofMat);
+        roof.position.y = bh + 0.2;
+        bg.add(roof);
+
+        // Roof spire or HVAC unit
+        if (bh > 16) {
+          const spire = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.2, 4.0, 6), new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.9 }));
+          spire.position.y = bh + 2.2;
+          bg.add(spire);
+        } else {
+          const vent = new THREE.Mesh(new THREE.BoxGeometry(bw * 0.45, 0.8, bd * 0.45), roofMat);
+          vent.position.set(0, bh + 0.5, 0);
+          bg.add(vent);
+        }
+
+        // Window Decals Texture
+        const winCanvas = document.createElement('canvas');
+        winCanvas.width = 128;
+        winCanvas.height = 128;
+        const wCtx = winCanvas.getContext('2d');
+        wCtx.fillStyle = colorDef.isGlass ? '#0284c7' : '#cbd5e1';
+        wCtx.fillRect(0, 0, 128, 128);
+        for (let r = 8; r < 120; r += 24) {
+          for (let c = 8; c < 120; c += 24) {
+            wCtx.fillStyle = '#ffffff';
+            wCtx.fillRect(c, r, 16, 16);
+            wCtx.fillStyle = '#e0f2fe';
+            wCtx.fillRect(c + 2, r + 2, 12, 12);
+          }
+        }
+        const winTex = new THREE.CanvasTexture(winCanvas);
+        winTex.wrapS = THREE.RepeatWrapping;
+        winTex.wrapT = THREE.RepeatWrapping;
+        winTex.repeat.set(Math.max(1, Math.round(bw / 2.6)), Math.max(1, Math.round(bh / 3.2)));
+
+        const winMat = new THREE.MeshStandardMaterial({ map: winTex, roughness: 0.25, metalness: 0.2 });
+        const facadeF = new THREE.Mesh(new THREE.PlaneGeometry(bw * 0.94, bh * 0.92), winMat);
+        facadeF.position.set(0, bh / 2, bd / 2 + 0.02);
+        bg.add(facadeF);
+        const facadeB = facadeF.clone();
+        facadeB.position.z = -bd / 2 - 0.02;
+        facadeB.rotation.y = Math.PI;
+        bg.add(facadeB);
+        const facadeL = new THREE.Mesh(new THREE.PlaneGeometry(bd * 0.94, bh * 0.92), winMat);
+        facadeL.position.set(-bw / 2 - 0.02, bh / 2, 0);
+        facadeL.rotation.y = -Math.PI / 2;
+        bg.add(facadeL);
+        const facadeR = facadeL.clone();
+        facadeR.position.x = bw / 2 + 0.02;
+        facadeR.rotation.y = Math.PI / 2;
+        bg.add(facadeR);
+
+        bg.position.set(bx, 0, bz);
+        cityEnvGroup.add(bg);
+      }
+
+      // 4. Expansive Sunny Storybook Grass Ground (綠意公園地坪)
+      const grassMat = new THREE.MeshStandardMaterial({ color: 0x5da02c, roughness: 0.85, metalness: 0.05 });
+      const groundPlane = new THREE.Mesh(new THREE.PlaneGeometry(320, 320), grassMat);
+      groundPlane.rotation.x = -Math.PI / 2;
+      groundPlane.position.set(0, -0.06, mode === 'maze' ? 30 : (mode === 'runner' ? 80 : 0));
+      groundPlane.receiveShadow = true;
+      cityEnvGroup.add(groundPlane);
+
+      // 5. Fluffy Clouds in Sunny Blue Sky
+      const cloudList = [
+        { x: -38, y: 34, z: -25, s: 1.5 },
+        { x: 32,  y: 38, z: -18, s: 1.6 },
+        { x: 0,   y: 40, z: 35,  s: 1.5 },
+        { x: -48, y: 36, z: 55,  s: 1.7 },
+        { x: 48,  y: 37, z: 70,  s: 1.6 }
+      ];
+      cloudList.forEach(c => addFluffyCloud(c.x, c.y, c.z, c.s));
+
+      if (mode === 'snake') {
+        // Ring of Skyscrapers around the compact Snake Plaza (Scaled to 0.65X)
+        const bConfigs = [
+          { x: -20, z: -18, w: 7, d: 7, h: 20, c: 0 },
+          { x: -10, z: -19, w: 6, d: 5, h: 15, c: 1 },
+          { x: 0,   z: -20, w: 8, d: 6, h: 24, c: 2 },
+          { x: 10,  z: -19, w: 6, d: 5, h: 17, c: 3 },
+          { x: 20,  z: -18, w: 7, d: 7, h: 22, c: 4 },
+
+          { x: -22, z: 0,   w: 7, d: 8, h: 19, c: 5 },
+          { x: 22,  z: 0,   w: 7, d: 8, h: 21, c: 0 },
+
+          { x: -20, z: 18,  w: 7, d: 7, h: 17, c: 1 },
+          { x: -10, z: 19,  w: 6, d: 5, h: 22, c: 2 },
+          { x: 0,   z: 20,  w: 8, d: 6, h: 26, c: 4 },
+          { x: 10,  z: 19,  w: 6, d: 5, h: 18, c: 3 },
+          { x: 20,  z: 18,  w: 7, d: 7, h: 21, c: 5 }
+        ];
+        bConfigs.forEach(b => addBuilding(b.x, b.z, b.w, b.d, b.h, buildingColors[b.c % buildingColors.length]));
+
+        // Trees along borders
+        [-13, -6.5, 0, 6.5, 13].forEach(x => {
+          addParkTree(x, -13, 1.15);
+          addParkTree(x, 13, 1.15);
+          addParkTree(-13, x, 1.15);
+          addParkTree(13, x, 1.15);
+        });
+      } else if (mode === 'runner') {
+        // High-rise City Skyline behind the runner sky-bridge
+        for (let x = -20; x <= 220; x += 15) {
+          const h1 = 18 + (Math.sin(x * 0.35) * 8 + 8);
+          const h2 = 24 + (Math.cos(x * 0.45) * 10 + 10);
+          const c1 = Math.abs(Math.floor(x / 15)) % buildingColors.length;
+          const c2 = (c1 + 2) % buildingColors.length;
+          addBuilding(x, -15, 9, 8, h1, buildingColors[c1]);
+          addBuilding(x + 7, -27, 11, 10, h2, buildingColors[c2]);
+          addParkTree(x + 3, -6.5, 1.3);
+          addParkTree(x + 10, -6.5, 1.1);
+        }
+      } else { // maze
+        // Modern City Office Towers flanking the Maze (X < -15 and X > +15)
+        for (let z = -6; z <= 74; z += 12) {
+          const hL1 = 18 + ((z * 7) % 12);
+          const hL2 = 25 + ((z * 13) % 15);
+          const hR1 = 20 + ((z * 5) % 14);
+          const hR2 = 28 + ((z * 11) % 16);
+          const cL = Math.abs(Math.floor(z / 12)) % buildingColors.length;
+          const cR = (cL + 3) % buildingColors.length;
+
+          // Left City Blocks
+          addBuilding(-19, z, 8, 9, hL1, buildingColors[cL]);
+          addBuilding(-30, z, 10, 10, hL2, buildingColors[(cL + 1) % buildingColors.length]);
+          addParkTree(-13.5, z, 1.2);
+          addParkTree(-13.5, z + 6, 1.1);
+
+          // Right City Blocks
+          addBuilding(19, z, 8, 9, hR1, buildingColors[cR]);
+          addBuilding(30, z, 10, 10, hR2, buildingColors[(cR + 1) % buildingColors.length]);
+          addParkTree(13.5, z, 1.2);
+          addParkTree(13.5, z + 6, 1.1);
+        }
+      }
+    }
+
+    const worldGroup = new THREE.Group();
+    scene.add(worldGroup);
+
+    // --- Helpers for 3D Pokémon Meshes (1.0X in Dungeons) ---
+    function makeMat(hex, rough = 0.35) {
+      return new THREE.MeshStandardMaterial({ color: hex, roughness: rough, metalness: 0.08 });
+    }
+
+    function addAnimeEyes(headGroup, yPos, zPos, xSpread, isGengar = false) {
+      const whiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      const pupilMat = new THREE.MeshBasicMaterial({ color: isGengar ? 0xff1744 : 0x1a1a1a });
+      const irisMat = new THREE.MeshBasicMaterial({ color: isGengar ? 0xd50000 : 0x3b2314 });
+
+      [-1, 1].forEach((side) => {
+        const eyeGrp = new THREE.Group();
+        if (isGengar) {
+          const eyeMesh = new THREE.Mesh(new THREE.ConeGeometry(0.24, 0.4, 3), pupilMat);
+          eyeMesh.rotation.z = side * 0.5;
+          eyeMesh.rotation.x = Math.PI / 2;
+          eyeGrp.add(eyeMesh);
+        } else {
+          const darkBase = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 12), pupilMat);
+          darkBase.scale.set(0.95, 1.15, 0.55);
+          eyeGrp.add(darkBase);
+
+          const lowerIris = new THREE.Mesh(new THREE.SphereGeometry(0.15, 10, 10), irisMat);
+          lowerIris.position.set(0, -0.03, 0.04);
+          lowerIris.scale.set(0.9, 0.8, 0.4);
+          eyeGrp.add(lowerIris);
+
+          const hi1 = new THREE.Mesh(new THREE.SphereGeometry(0.065, 8, 8), whiteMat);
+          hi1.position.set(0.04 * side, 0.06, 0.08);
+          eyeGrp.add(hi1);
+        }
+        eyeGrp.position.set(side * xSpread, yPos, zPos);
+        headGroup.add(eyeGrp);
+      });
+    }
+
+    function buildPokemonMesh(species, scale = 1.0) {
+      const g = new THREE.Group();
+      if (species === 'pikachu') {
+        const body = new THREE.Mesh(new THREE.SphereGeometry(0.8, 20, 20), makeMat(0xfacc15, 0.28));
+        body.scale.set(1.0, 1.05, 1.0);
+        g.add(body);
+        [-1, 1].forEach((side) => {
+          const ear = new THREE.Mesh(new THREE.ConeGeometry(0.18, 1.05, 14), makeMat(0xfacc15, 0.28));
+          ear.position.set(side * 0.46, 0.95, 0);
+          ear.rotation.z = side * -0.35;
+          g.add(ear);
+          const tip = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.35, 14), makeMat(0x1e293b, 0.28));
+          tip.position.set(side * 0.58, 1.3, 0);
+          tip.rotation.z = side * -0.35;
+          g.add(tip);
+          const cheek = new THREE.Mesh(new THREE.SphereGeometry(0.17, 10, 10), makeMat(0xef4444, 0.4));
+          cheek.position.set(side * 0.58, 0.02, 0.58);
+          g.add(cheek);
+        });
+        addAnimeEyes(g, 0.18, 0.65, 0.28);
+      } else if (species === 'charmander') {
+        const body = new THREE.Mesh(new THREE.SphereGeometry(0.8, 20, 20), makeMat(0xf97316, 0.32));
+        g.add(body);
+        const belly = new THREE.Mesh(new THREE.SphereGeometry(0.66, 18, 18), makeMat(0xfef08a, 0.32));
+        belly.position.set(0, -0.12, 0.28);
+        belly.scale.set(0.85, 0.95, 0.45);
+        g.add(belly);
+        addAnimeEyes(g, 0.18, 0.65, 0.28);
+      } else if (species === 'squirtle') {
+        const body = new THREE.Mesh(new THREE.SphereGeometry(0.76, 20, 20), makeMat(0x38bdf8, 0.32));
+        g.add(body);
+        const shell = new THREE.Mesh(new THREE.SphereGeometry(0.84, 18, 18), makeMat(0x92400e, 0.4));
+        shell.position.set(0, 0, -0.2);
+        shell.scale.set(0.95, 1.05, 0.75);
+        g.add(shell);
+        addAnimeEyes(g, 0.18, 0.62, 0.28);
+      } else if (species === 'gengar') {
+        const body = new THREE.Mesh(new THREE.SphereGeometry(0.92, 22, 22), makeMat(0x7c3aed, 0.35));
+        body.scale.set(1.1, 1.0, 1.0);
+        g.add(body);
+        [-1, 1].forEach((side) => {
+          const ear = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.7, 14), makeMat(0x6d28d9, 0.35));
+          ear.position.set(side * 0.58, 0.84, 0.04);
+          ear.rotation.z = side * -0.4;
+          g.add(ear);
+        });
+        addAnimeEyes(g, 0.18, 0.68, 0.34, true);
+        const mouth = new THREE.Mesh(new THREE.TorusGeometry(0.44, 0.09, 10, 20, Math.PI), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+        mouth.position.set(0, -0.08, 0.76);
+        mouth.rotation.x = 0.2;
+        mouth.rotation.z = Math.PI;
+        g.add(mouth);
+      } else { // eevee
+        const body = new THREE.Mesh(new THREE.SphereGeometry(0.76, 20, 20), makeMat(0xc27838, 0.35));
+        g.add(body);
+        const ruff = new THREE.Mesh(new THREE.TorusGeometry(0.58, 0.24, 14, 20), makeMat(0xffedd5, 0.5));
+        ruff.rotation.x = Math.PI / 2;
+        ruff.position.y = -0.36;
+        g.add(ruff);
+        [-1, 1].forEach((side) => {
+          const ear = new THREE.Mesh(new THREE.ConeGeometry(0.22, 1.1, 14), makeMat(0xa15822, 0.35));
+          ear.position.set(side * 0.5, 0.92, -0.04);
+          ear.rotation.z = side * -0.42;
+          g.add(ear);
+        });
+        addAnimeEyes(g, 0.18, 0.62, 0.28);
+      }
+      g.scale.set(scale, scale, scale);
+      return g;
+    }
+
+    // --- Floating Magic Hat Mesh ---
+    function buildFloatingHatMesh(capeType) {
+      const hatRoot = new THREE.Group();
+      hatRoot.name = 'floatingHatGroup';
+
+      let auraColor = 0x38bdf8;
+      if (capeType === 'mike') auraColor = 0x22c55e;
+      else if (capeType === 'boo') auraColor = 0xf43f5e;
+      else if (capeType === 'randall') auraColor = 0xa855f7;
+
+      const auraRing = new THREE.Mesh(
+        new THREE.TorusGeometry(0.72, 0.04, 10, 32),
+        new THREE.MeshBasicMaterial({ color: auraColor, transparent: true, opacity: 0.85 })
+      );
+      auraRing.rotation.x = Math.PI / 2;
+      auraRing.position.y = 1.15;
+      hatRoot.add(auraRing);
+
+      const hatModel = new THREE.Group();
+      hatModel.position.y = 1.32;
+
+      if (capeType === 'sulley') {
+        const base = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.62, 0.28, 20), makeMat(0x0284c7, 0.3));
+        hatModel.add(base);
+        const dome = new THREE.Mesh(new THREE.SphereGeometry(0.52, 16, 16), makeMat(0x0284c7, 0.3));
+        dome.position.y = 0.12;
+        hatModel.add(dome);
+        [-1, 1].forEach((side) => {
+          const horn = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.52, 14), makeMat(0x9333ea, 0.3));
+          horn.position.set(side * 0.44, 0.36, 0);
+          horn.rotation.z = side * -0.45;
+          hatModel.add(horn);
+        });
+      } else if (capeType === 'mike') {
+        const hardhat = new THREE.Mesh(new THREE.SphereGeometry(0.58, 18, 18), makeMat(0x4ade80, 0.25));
+        hardhat.scale.set(1.0, 0.72, 1.0);
+        hardhat.position.y = 0.08;
+        hatModel.add(hardhat);
+        const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.05, 20), makeMat(0x22c55e, 0.3));
+        brim.position.y = -0.1;
+        hatModel.add(brim);
+        const eyeSclera = new THREE.Mesh(new THREE.SphereGeometry(0.25, 14, 14), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+        eyeSclera.position.set(0, 0.14, 0.5);
+        hatModel.add(eyeSclera);
+        const eyeIris = new THREE.Mesh(new THREE.SphereGeometry(0.14, 12, 12), new THREE.MeshBasicMaterial({ color: 0x16a34a }));
+        eyeIris.position.set(0, 0.14, 0.66);
+        eyeIris.scale.set(1, 1, 0.3);
+        hatModel.add(eyeIris);
+        const eyePupil = new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 10), new THREE.MeshBasicMaterial({ color: 0x052e16 }));
+        eyePupil.position.set(0, 0.14, 0.71);
+        eyePupil.scale.set(1, 1, 0.2);
+        hatModel.add(eyePupil);
+      } else if (capeType === 'boo') {
+        const cap = new THREE.Mesh(new THREE.SphereGeometry(0.55, 18, 18), makeMat(0xec4899, 0.35));
+        cap.position.y = 0.12;
+        hatModel.add(cap);
+        [-1, 1].forEach((side) => {
+          const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.36, 8), makeMat(0xfacc15, 0.2));
+          stem.position.set(side * 0.28, 0.52, 0);
+          stem.rotation.z = side * -0.25;
+          hatModel.add(stem);
+          const eyeBall = new THREE.Mesh(new THREE.SphereGeometry(0.13, 12, 12), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+          eyeBall.position.set(side * 0.36, 0.72, 0);
+          hatModel.add(eyeBall);
+          const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.065, 10, 10), new THREE.MeshBasicMaterial({ color: 0x1e293b }));
+          pupil.position.set(side * 0.36, 0.72, 0.1);
+          hatModel.add(pupil);
+        });
+      } else { // randall
+        const crownBase = new THREE.Mesh(new THREE.TorusGeometry(0.56, 0.09, 10, 24), makeMat(0x334155, 0.2));
+        crownBase.rotation.x = Math.PI / 2;
+        crownBase.position.y = 0.08;
+        hatModel.add(crownBase);
+        for (let i = -2; i <= 2; i++) {
+          const fin = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.44 + Math.abs(i) * -0.06, 10), makeMat(0xa855f7, 0.2));
+          fin.position.set(i * 0.18, 0.34, -0.12);
+          fin.rotation.x = -0.2;
+          hatModel.add(fin);
+        }
+      }
+
+      hatRoot.add(hatModel);
+      return hatRoot;
+    }
+
+    // --- State Variables ---
+    let currentMode = 'snake';
+    let currentChar = 'pikachu';
+    let currentCape = 'sulley';
+    let isPlaying = false;
+    let challengeTimer = 25.0;
+    let lastResultSuccess = false;
+
+    // Read URL query parameters if launched from main game!
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('mode')) currentMode = urlParams.get('mode');
+    if (urlParams.get('cape')) currentCape = urlParams.get('cape');
+    if (urlParams.get('char')) currentChar = urlParams.get('char');
+
+    const isInsideFrame = (window.parent && window.parent !== window);
+    if (isInsideFrame) {
+      const btnReturn = document.getElementById('btn-return-main');
+      if (btnReturn) btnReturn.style.display = 'inline-block';
+    }
+
+    let playerContainer = new THREE.Group();
+    scene.add(playerContainer);
+
+    function rebuildPlayer() {
+      while (playerContainer.children.length > 0) {
+        playerContainer.remove(playerContainer.children[0]);
+      }
+      const charMesh = buildPokemonMesh(currentChar, 1.0);
+      playerContainer.add(charMesh);
+
+      const hat = buildFloatingHatMesh(currentCape);
+      playerContainer.add(hat);
+    }
+    rebuildPlayer();
+
+    // ==========================================
+    // 🐍 副本 1 引擎：經典貪吃蛇 (Classic Snake)
+    // 修正：走慢一點 (moveInterval: 0.17s)、場地豆豆多達 25 顆、吃滿 10 顆才隨機出魔帽
+    // ==========================================
+    const snakeEngine = {
+      gridSize: 15, // 場地縮小至原先的約 0.68X（15x15格），小巧精緻轉向更靈敏！
+      cellSize: 1.35,
+      snakeBody: [],
+      dir: { x: 0, z: -1 },
+      nextDir: { x: 0, z: -1 },
+      moveTimer: 0,
+      moveInterval: 0.28, // 放慢速度 (0.28s)，從容好控制，絕不手忙腳亂！
+
+      dots: [],
+      maxDots: 18, // 18 顆充沛發光能量豆均勻散佈
+      eatenDots: 0,
+      targetForHat: 10, // 吃滿 10 顆才出現魔帽
+
+      specialItemMesh: null,
+      specialItemPos: null,
+      hasHatSpawned: false,
+      bodyMeshes: [],
+
+      init() {
+        this.clear();
+        this.dir = { x: 0, z: -1 };
+        this.nextDir = { x: 0, z: -1 };
+        this.eatenDots = 0;
+        this.hasHatSpawned = false;
+        this.specialItemPos = null;
+
+        // Initial 3-segment snake
+        this.snakeBody = [
+          { x: 0, z: 2 },
+          { x: 0, z: 3 },
+          { x: 0, z: 4 }
+        ];
+
+        // Arena Floor (Warm Dark Slate Plaza - 高對比深色地坪)
+        const arenaRadius = (this.gridSize * this.cellSize) / 2;
+        const floorGeo = new THREE.PlaneGeometry(arenaRadius * 2, arenaRadius * 2);
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.65, metalness: 0.15 });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.y = 0;
+        floor.receiveShadow = true;
+        worldGroup.add(floor);
+
+        // Grid Lines (Bright Golden-Cyan Contrasting Grid)
+        const gridHelper = new THREE.GridHelper(arenaRadius * 2, this.gridSize, 0x38bdf8, 0x334155);
+        gridHelper.position.y = 0.02;
+        worldGroup.add(gridHelper);
+
+        // High-Visibility 3D Boundary Security Walls (超強立體邊界感・高牆＋雷射警示頂欄＋四角發光警示柱)
+        const wallThick = 0.85;
+        const wallH = 1.75;
+        const arenaSize = arenaRadius * 2;
+        const wallMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.6, metalness: 0.3 });
+        const laserMat = new THREE.MeshStandardMaterial({
+          color: 0xf59e0b,
+          emissive: 0xd97706,
+          emissiveIntensity: 0.85,
+          roughness: 0.2
+        });
+
+        [-1, 1].forEach(side => {
+          // X-Axis Left / Right Barrier Walls
+          const wallX = new THREE.Mesh(new THREE.BoxGeometry(wallThick, wallH, arenaSize + wallThick * 2), wallMat);
+          wallX.position.set(side * (arenaRadius + wallThick / 2), wallH / 2, 0);
+          wallX.castShadow = true;
+          wallX.receiveShadow = true;
+          worldGroup.add(wallX);
+
+          // Glowing Hazard Laser Top Rail
+          const laserX = new THREE.Mesh(new THREE.BoxGeometry(wallThick + 0.12, 0.22, arenaSize + wallThick * 2), laserMat);
+          laserX.position.set(side * (arenaRadius + wallThick / 2), wallH + 0.11, 0);
+          worldGroup.add(laserX);
+
+          // Z-Axis Top / Bottom Barrier Walls
+          const wallZ = new THREE.Mesh(new THREE.BoxGeometry(arenaSize, wallH, wallThick), wallMat);
+          wallZ.position.set(0, wallH / 2, side * (arenaRadius + wallThick / 2));
+          wallZ.castShadow = true;
+          wallZ.receiveShadow = true;
+          worldGroup.add(wallZ);
+
+          const laserZ = new THREE.Mesh(new THREE.BoxGeometry(arenaSize, 0.22, wallThick + 0.12), laserMat);
+          laserZ.position.set(0, wallH + 0.11, side * (arenaRadius + wallThick / 2));
+          worldGroup.add(laserZ);
+        });
+
+        // 4 Corner Security Beacon Pillars (四角防護燈塔)
+        const pillarMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.4, metalness: 0.5 });
+        const beaconMat = new THREE.MeshStandardMaterial({
+          color: 0xef4444,
+          emissive: 0xdc2626,
+          emissiveIntensity: 0.95,
+          roughness: 0.2
+        });
+
+        [-1, 1].forEach(sx => {
+          [-1, 1].forEach(sz => {
+            const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.75, wallH + 0.6, 16), pillarMat);
+            pillar.position.set(sx * (arenaRadius + wallThick / 2), (wallH + 0.6) / 2, sz * (arenaRadius + wallThick / 2));
+            pillar.castShadow = true;
+            worldGroup.add(pillar);
+
+            const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.35, 12, 12), beaconMat);
+            beacon.position.set(sx * (arenaRadius + wallThick / 2), wallH + 0.75, sz * (arenaRadius + wallThick / 2));
+            worldGroup.add(beacon);
+          });
+        });
+
+        // Spawn 18 Glowing Dots everywhere on arena
+        for (let i = 0; i < this.maxDots; i++) {
+          this.spawnOneDot();
+        }
+
+        // 45° Toy-Box Diorama 3D Camera Angle（向後拉遠＋微抬鏡頭，四方圍牆與下半部完全完整呈現！）
+        camera.position.set(0, 21.0, 18.5);
+        camera.lookAt(0, 0, 1.2);
+
+        document.getElementById('hud-goal-label').textContent = '🟡 豆豆進度：';
+        document.getElementById('hud-counter').innerHTML = `<b style="color:#f59e0b;">0 / ${this.targetForHat} 顆</b>`;
+      },
+
+      clear() {
+        while (worldGroup.children.length > 0) worldGroup.remove(worldGroup.children[0]);
+        this.dots.forEach(d => { if (d.mesh) scene.remove(d.mesh); });
+        this.dots = [];
+        this.bodyMeshes.forEach(m => scene.remove(m));
+        this.bodyMeshes = [];
+        if (this.specialItemMesh) {
+          worldGroup.remove(this.specialItemMesh);
+          this.specialItemMesh = null;
+        }
+      },
+
+      spawnOneDot() {
+        const half = Math.floor(this.gridSize / 2) - 1;
+        let rx, rz, collision;
+        do {
+          rx = Math.floor(Math.random() * (half * 2 + 1)) - half;
+          rz = Math.floor(Math.random() * (half * 2 + 1)) - half;
+          collision = this.snakeBody.some(b => b.x === rx && b.z === rz) ||
+                      this.dots.some(d => d.x === rx && d.z === rz) ||
+                      (this.specialItemPos && this.specialItemPos.x === rx && this.specialItemPos.z === rz);
+        } while (collision);
+
+        const dMat = new THREE.MeshStandardMaterial({
+          color: 0xfacc15,
+          emissive: 0xd97706,
+          emissiveIntensity: 0.75,
+          roughness: 0.25
+        });
+        const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.32, 10, 10), dMat);
+        mesh.position.set(rx * this.cellSize, 0.38, rz * this.cellSize);
+        worldGroup.add(mesh);
+        this.dots.push({ x: rx, z: rz, mesh });
+      },
+
+      spawnSpecialHat() {
+        const half = Math.floor(this.gridSize / 2) - 2;
+        let rx, rz, collision;
+        do {
+          rx = Math.floor(Math.random() * (half * 2 + 1)) - half;
+          rz = Math.floor(Math.random() * (half * 2 + 1)) - half;
+          collision = this.snakeBody.some(b => b.x === rx && b.z === rz);
+        } while (collision);
+
+        this.specialItemPos = { x: rx, z: rz };
+        this.hasHatSpawned = true;
+
+        const itemGrp = new THREE.Group();
+        const beam = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.6, 0.6, 12, 16, 1, true),
+          new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.45, side: THREE.DoubleSide })
+        );
+        beam.position.y = 6;
+        itemGrp.add(beam);
+
+        const hatIcon = buildFloatingHatMesh(currentCape);
+        hatIcon.scale.set(1.3, 1.3, 1.3);
+        hatIcon.position.y = 0.5;
+        itemGrp.add(hatIcon);
+
+        itemGrp.position.set(rx * this.cellSize, 0, rz * this.cellSize);
+        worldGroup.add(itemGrp);
+        this.specialItemMesh = itemGrp;
+
+        sound.playVictory();
+        showToast('🌟 恭喜吃滿10顆！限定怪獸魔帽已在場上降臨！快去吃！');
+        document.getElementById('hud-counter').innerHTML = '<span style="color:#f59e0b; font-weight:900;">⭐ 魔帽已降臨！咬下即獲勝！</span>';
+      },
+
+      setDirection(dx, dz) {
+        if (this.dir.x !== 0 && dx === -this.dir.x) return;
+        if (this.dir.z !== 0 && dz === -this.dir.z) return;
+        this.nextDir = { x: dx, z: dz };
+      },
+
+      update(dt) {
+        if (!isPlaying) return;
+
+        // Dots pulse
+        this.dots.forEach((d, idx) => {
+          if (d.mesh) {
+            d.mesh.position.y = 0.38 + Math.sin(Date.now() * 0.006 + idx) * 0.08;
+          }
+        });
+
+        // Special hat rotation
+        if (this.specialItemMesh) {
+          this.specialItemMesh.rotation.y += 2.2 * dt;
+        }
+
+        // Snake move timer
+        this.moveTimer += dt;
+        if (this.moveTimer >= this.moveInterval) {
+          this.moveTimer = 0;
+          this.step();
+        }
+
+        // Visual head position (站在地面上 Y = 0.8，絕不沉入地底！)
+        const snakeHeadY = 0.8;
+        const snakeFollowerY = 0.52;
+        const head = this.snakeBody[0];
+        if (head) {
+          playerContainer.position.set(head.x * this.cellSize, snakeHeadY, head.z * this.cellSize);
+          playerContainer.rotation.y = Math.atan2(this.dir.x, this.dir.z);
+        }
+
+        // Follower body segments (Mini Chicks 0.65X, NO hat!)
+        while (this.bodyMeshes.length < this.snakeBody.length - 1) {
+          const segMesh = buildPokemonMesh(currentChar, 0.65);
+          worldGroup.add(segMesh);
+          this.bodyMeshes.push(segMesh);
+        }
+
+        for (let i = 1; i < this.snakeBody.length; i++) {
+          const seg = this.snakeBody[i];
+          const mesh = this.bodyMeshes[i - 1];
+          if (mesh) {
+            mesh.position.set(seg.x * this.cellSize, snakeFollowerY, seg.z * this.cellSize);
+          }
+        }
+      },
+
+      step() {
+        this.dir = { ...this.nextDir };
+        const head = this.snakeBody[0];
+        const newHead = { x: head.x + this.dir.x, z: head.z + this.dir.z };
+
+        // 1. Boundary Wall Check
+        const half = Math.floor(this.gridSize / 2);
+        if (Math.abs(newHead.x) >= half || Math.abs(newHead.z) >= half) {
+          sound.playFail();
+          showResultModal(false, '撞到邊界高壓電網！經典貪吃蛇挑戰失敗，退出副本！');
+          return;
+        }
+
+        // 2. Self Collision Check
+        for (let i = 0; i < this.snakeBody.length - 1; i++) {
+          if (this.snakeBody[i].x === newHead.x && this.snakeBody[i].z === newHead.z) {
+            sound.playFail();
+            showResultModal(false, '咬到自己的身體了！挑戰失敗，退出副本！');
+            return;
+          }
+        }
+
+        this.snakeBody.unshift(newHead);
+
+        // 3. Special Hat Item Check ("吃到道具立刻消失！")
+        if (this.specialItemPos && newHead.x === this.specialItemPos.x && newHead.z === this.specialItemPos.z) {
+          sound.playVictory();
+          if (this.specialItemMesh) {
+            worldGroup.remove(this.specialItemMesh);
+            this.specialItemMesh = null;
+          }
+          this.specialItemPos = null;
+          if (window.confetti) window.confetti({ particleCount: 130, spread: 85 });
+          showResultModal(true, `🎉 大獲全勝！成功在經典貪吃蛇精準吃到【${getCapeName(currentCape)}】！已收納進裝備！`);
+          return;
+        }
+
+        // 4. Dot Check (吃到豆豆立刻消失！場上豆豆真實遞減)
+        const dIdx = this.dots.findIndex(d => d.x === newHead.x && d.z === newHead.z);
+        if (dIdx !== -1) {
+          sound.playCollect();
+          worldGroup.remove(this.dots[dIdx].mesh);
+          this.dots.splice(dIdx, 1);
+          this.eatenDots++;
+
+          // Check if reached 10 dots to spawn hat!
+          if (!this.hasHatSpawned) {
+            document.getElementById('hud-counter').innerHTML = `<b style="color:#f59e0b;">${this.eatenDots} / ${this.targetForHat} 顆</b>`;
+            if (this.eatenDots >= this.targetForHat) {
+              this.spawnSpecialHat();
+            }
+          }
+          // 修正：吃掉的豆豆真正消失，絕不再原地重複補發，讓玩家明確看到吃光！
+        } else {
+          this.snakeBody.pop();
+        }
+      }
+    };
+
+    // ==========================================
+    // 🏃 副本 2 引擎：橫幅跳躍吃星星 (Side-Scrolling Runner)
+    // ==========================================
+    const runnerEngine = {
+      playerX: 0,
+      playerY: 0,
+      velY: 0,
+      isGrounded: true,
+      jumpCount: 0,
+      stars: [],
+      obstacles: [],
+      targetStars: 10,
+      collectedStars: 0,
+      obstacleTimer: 1.8,
+      runSpeed: 8.4,
+      trackLength: 190,
+
+      init() {
+        this.clear();
+        this.playerX = 0;
+        this.playerY = 0;
+        this.velY = 0;
+        this.jumpCount = 0;
+        this.collectedStars = 0;
+        this.obstacleTimer = 1.8;
+
+        const trackGeo = new THREE.BoxGeometry(this.trackLength, 1.2, 4.4);
+        const trackMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.5, metalness: 0.1 });
+        const track = new THREE.Mesh(trackGeo, trackMat);
+        track.position.set(this.trackLength / 2 - 10, -0.6, 0);
+        track.receiveShadow = true;
+        track.castShadow = true;
+        worldGroup.add(track);
+
+        const railMat = new THREE.MeshBasicMaterial({ color: 0x0284c7 });
+        const rail1 = new THREE.Mesh(new THREE.BoxGeometry(this.trackLength, 0.16, 0.16), railMat);
+        rail1.position.set(this.trackLength / 2 - 10, 0.08, 2.1);
+        worldGroup.add(rail1);
+        const rail2 = rail1.clone();
+        rail2.position.z = -2.1;
+        worldGroup.add(rail2);
+
+        const baseY = 0.82; // 讓角色底座剛好踩在路面上，絕不沉入路底下
+        for (let x = 12; x < this.trackLength - 10; x += 6.0) {
+          const isNegative = (x % 18 === 0);
+          const starY = isNegative ? baseY + 0.75 : ((x % 12 === 0) ? baseY + 2.3 : baseY + 1.15);
+          this.spawnStar(x, starY, isNegative);
+        }
+
+        camera.position.set(0 + 5, 2.8, 13.5);
+        camera.lookAt(0 + 5, 2.0, 0);
+
+        document.getElementById('hud-goal-label').textContent = '⭐ 星星：';
+        document.getElementById('hud-counter').innerHTML = `<b style="color:#f59e0b;">0 / ${this.targetStars}</b>（避開🟣負星）`;
+      },
+
+      clear() {
+        while (worldGroup.children.length > 0) worldGroup.remove(worldGroup.children[0]);
+        this.stars = [];
+        this.obstacles = [];
+      },
+
+      spawnStar(x, y, isNegative = false) {
+        let starMat;
+        if (isNegative) {
+          starMat = new THREE.MeshStandardMaterial({
+            color: 0x9333ea,
+            emissive: 0x7e22ce,
+            emissiveIntensity: 0.85,
+            roughness: 0.3
+          });
+        } else {
+          starMat = new THREE.MeshStandardMaterial({
+            color: 0xfacc15,
+            emissive: 0xeab308,
+            emissiveIntensity: 0.75,
+            roughness: 0.25
+          });
+        }
+
+        const starMesh = new THREE.Mesh(new THREE.OctahedronGeometry(0.52, 0), starMat);
+        starMesh.position.set(x, y, 0);
+        worldGroup.add(starMesh);
+        this.stars.push({ mesh: starMesh, x, y, isNegative, active: true });
+      },
+
+      spawnObstacle(x) {
+        const obsGrp = new THREE.Group();
+        const cone = new THREE.Mesh(
+          new THREE.ConeGeometry(0.42, 1.2, 12),
+          new THREE.MeshStandardMaterial({ color: 0xef4444, metalness: 0.3, roughness: 0.3 })
+        );
+        cone.position.y = 0.6;
+        obsGrp.add(cone);
+
+        obsGrp.position.set(x, 0, 0);
+        worldGroup.add(obsGrp);
+        this.obstacles.push({ mesh: obsGrp, x, active: true });
+      },
+
+      jump() {
+        if (this.jumpCount < 2) {
+          this.velY = 10.8;
+          this.jumpCount++;
+          this.isGrounded = false;
+          sound.playJump();
+        }
+      },
+
+      update(dt) {
+        if (!isPlaying) return;
+
+        this.playerX += this.runSpeed * dt;
+
+        this.velY -= 25.0 * dt;
+        this.playerY += this.velY * dt;
+        if (this.playerY <= 0) {
+          this.playerY = 0;
+          this.velY = 0;
+          this.isGrounded = true;
+          this.jumpCount = 0;
+        }
+
+        this.obstacleTimer -= dt;
+        if (this.obstacleTimer <= 0) {
+          this.obstacleTimer = 1.6 + Math.random() * 0.9;
+          this.spawnObstacle(this.playerX + 22);
+        }
+
+        const baseY = 0.82;
+        playerContainer.position.set(this.playerX, baseY + this.playerY, 0);
+        playerContainer.rotation.y = Math.PI / 2;
+        playerContainer.rotation.z = Math.sin(this.playerX * 3.5) * 0.08;
+
+        camera.position.x = this.playerX + 5.0;
+        camera.position.y = 2.8 + this.playerY * 0.25;
+        camera.position.z = 13.5;
+        camera.lookAt(this.playerX + 5.0, 2.0, 0);
+
+        for (let star of this.stars) {
+          if (!star.active) continue;
+          star.mesh.rotation.y += 3.5 * dt;
+          const dx = Math.abs(star.x - this.playerX);
+          const dy = Math.abs(star.y - (baseY + this.playerY));
+
+          if (dx < 1.1 && dy < 1.25) {
+            star.active = false;
+            worldGroup.remove(star.mesh);
+
+            if (star.isNegative) {
+              sound.playPoison();
+              this.collectedStars = Math.max(0, this.collectedStars - 1);
+              showToast('🟣 誤觸負能量暗星！星星 -1！注意跳起避開！');
+            } else {
+              sound.playCollect();
+              this.collectedStars++;
+            }
+
+            document.getElementById('hud-counter').innerHTML = `<b style="color:#f59e0b;">${this.collectedStars} / ${this.targetStars}</b>`;
+
+            if (this.collectedStars >= this.targetStars) {
+              sound.playVictory();
+              if (window.confetti) window.confetti({ particleCount: 130, spread: 80 });
+              showResultModal(true, `🎉 挑戰成功！在限時內成功吃滿 ${this.targetStars} 顆星星！榮獲【${getCapeName(currentCape)}】！`);
+              return;
+            }
+          }
+        }
+
+        for (let obs of this.obstacles) {
+          if (!obs.active) continue;
+          const dx = Math.abs(obs.x - this.playerX);
+          if (dx < 1.0 && this.playerY < 0.75) {
+            obs.active = false;
+            worldGroup.remove(obs.mesh);
+            sound.playFail();
+            challengeTimer = Math.max(0.1, challengeTimer - 2.0);
+            showToast('💥 撞到障礙物！時間扣除 2 秒！');
+          }
+        }
+
+        challengeTimer -= dt;
+        if (challengeTimer <= 0) {
+          sound.playFail();
+          showResultModal(false, `時間到！只收集了 ${this.collectedStars} / ${this.targetStars} 顆星星，未達足數，退出副本！`);
+        }
+      }
+    };
+
+    // ==========================================
+    // 🧭 副本 3 引擎：精緻複雜滾動迷宮 (鳥俯視角・一律往上走・4個出口)
+    // ==========================================
+    const mazeEngine = {
+      playerPos: new THREE.Vector3(0, 0, 0),
+      moveDir: new THREE.Vector2(0, 0),
+      luckyDoorIndex: 2,
+      doorMeshes: [],
+      mazeWalls: [],
+      depth: 64,
+
+      init() {
+        this.clear();
+        this.playerPos.set(0, 0, 0.5);
+        this.moveDir.set(0, 0);
+        playerContainer.position.set(0, 0.8, 0.5);
+        playerContainer.rotation.y = 0;
+
+        this.luckyDoorIndex = Math.floor(Math.random() * 4) + 1;
+
+        // Ground Floor (Warm Rich Slate Promenade / 暖調石板大道，告別刺眼死白)
+        const floorGeo = new THREE.PlaneGeometry(26, this.depth + 16);
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x242e3d, roughness: 0.65, metalness: 0.12 });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.set(0, 0, this.depth / 2 - 2);
+        floor.receiveShadow = true;
+        worldGroup.add(floor);
+
+        // Glowing Start Line on Floor (Z = -0.5) - 深墨綠金邊典雅起跑線
+        const startLineCanvas = document.createElement('canvas');
+        startLineCanvas.width = 512;
+        startLineCanvas.height = 128;
+        const sCtx = startLineCanvas.getContext('2d');
+        sCtx.fillStyle = '#064e3b';
+        sCtx.fillRect(0, 0, 512, 128);
+        sCtx.strokeStyle = '#f59e0b';
+        sCtx.lineWidth = 10;
+        sCtx.strokeRect(5, 5, 502, 118);
+        sCtx.fillStyle = '#fef3c7';
+        sCtx.font = 'bold 36px sans-serif';
+        sCtx.textAlign = 'center';
+        sCtx.textBaseline = 'middle';
+        sCtx.fillText('🏁 起點：請一律往上走 ⬆ 探索出口！', 256, 64);
+        const startLineTex = new THREE.CanvasTexture(startLineCanvas);
+        const startLineMesh = new THREE.Mesh(
+          new THREE.PlaneGeometry(16, 3.2),
+          new THREE.MeshBasicMaterial({ map: startLineTex, transparent: true, side: THREE.DoubleSide })
+        );
+        startLineMesh.rotation.set(-Math.PI / 2, 0, Math.PI);
+        startLineMesh.position.set(0, 0.04, -0.5);
+        worldGroup.add(startLineMesh);
+
+        // Glowing Golden-Amber Guide Arrows Along the Path pointing UP (+Z)
+        const arrowCanvas = document.createElement('canvas');
+        arrowCanvas.width = 128;
+        arrowCanvas.height = 128;
+        const aCtx = arrowCanvas.getContext('2d');
+        aCtx.fillStyle = '#f59e0b';
+        aCtx.beginPath();
+        aCtx.moveTo(64, 15);
+        aCtx.lineTo(110, 80);
+        aCtx.lineTo(82, 80);
+        aCtx.lineTo(82, 115);
+        aCtx.lineTo(46, 115);
+        aCtx.lineTo(46, 80);
+        aCtx.lineTo(18, 80);
+        aCtx.closePath();
+        aCtx.fill();
+        const arrowTex = new THREE.CanvasTexture(arrowCanvas);
+        const arrowPositions = [
+          { x: -3.2, z: 4.5 }, { x: 3.2, z: 4.5 },
+          { x: -6, z: 15 }, { x: 6, z: 15 },
+          { x: 0, z: 23 }, { x: -4, z: 33 }, { x: 4, z: 33 },
+          { x: -6.7, z: 52 }, { x: -2.2, z: 52 }, { x: 2.2, z: 52 }, { x: 6.7, z: 52 }
+        ];
+        arrowPositions.forEach(ap => {
+          const am = new THREE.Mesh(
+            new THREE.PlaneGeometry(2.0, 2.0),
+            new THREE.MeshBasicMaterial({ map: arrowTex, transparent: true, opacity: 0.85, side: THREE.DoubleSide })
+          );
+          am.rotation.set(-Math.PI / 2, 0, Math.PI);
+          am.position.set(ap.x, 0.03, ap.z);
+          worldGroup.add(am);
+        });
+
+        this.buildComplexLabyrinth();
+
+        // 4 Grand Exits at Z = depth (Z = 64) - 4 大寶石主題神殿傳送門
+        const exitZ = this.depth;
+        const doorSpacing = 4.5;
+        const startX = -((4 - 1) * doorSpacing) / 2;
+        const portalColors = [0xef4444, 0x10b981, 0x3b82f6, 0xa855f7];
+
+        for (let i = 1; i <= 4; i++) {
+          const doorX = startX + (i - 1) * doorSpacing;
+          const doorGrp = new THREE.Group();
+
+          const archMat = new THREE.MeshStandardMaterial({ color: 0xd97706, metalness: 0.75, roughness: 0.25 });
+          const archL = new THREE.Mesh(new THREE.BoxGeometry(0.38, 3.4, 0.38), archMat);
+          archL.position.set(-1.25, 1.7, 0);
+          doorGrp.add(archL);
+          const archR = archL.clone();
+          archR.position.x = 1.25;
+          doorGrp.add(archR);
+          const archTop = new THREE.Mesh(new THREE.BoxGeometry(2.88, 0.45, 0.45), archMat);
+          archTop.position.set(0, 3.5, 0);
+          doorGrp.add(archTop);
+
+          const portalCore = new THREE.Mesh(
+            new THREE.PlaneGeometry(2.3, 3.1),
+            new THREE.MeshBasicMaterial({ color: portalColors[i - 1], transparent: true, opacity: 0.88, side: THREE.DoubleSide })
+          );
+          portalCore.position.y = 1.6;
+          doorGrp.add(portalCore);
+
+          // Glowing Bronze Number Plaque
+          const signCanvas = document.createElement('canvas');
+          signCanvas.width = 160;
+          signCanvas.height = 80;
+          const sCtx2 = signCanvas.getContext('2d');
+          sCtx2.fillStyle = '#451a03';
+          sCtx2.fillRect(0, 0, 160, 80);
+          sCtx2.lineWidth = 5;
+          sCtx2.strokeStyle = '#f59e0b';
+          sCtx2.strokeRect(3, 3, 154, 74);
+          sCtx2.fillStyle = '#fef3c7';
+          sCtx2.font = 'bold 34px sans-serif';
+          sCtx2.textAlign = 'center';
+          sCtx2.textBaseline = 'middle';
+          sCtx2.fillText(`【 ${i} 號門 】`, 80, 40);
+
+          const signTex = new THREE.CanvasTexture(signCanvas);
+          const plaque = new THREE.Mesh(
+            new THREE.PlaneGeometry(2.2, 1.0),
+            new THREE.MeshBasicMaterial({ map: signTex, side: THREE.FrontSide })
+          );
+          plaque.position.set(0, 3.9, -0.05);
+          plaque.rotation.y = Math.PI;
+          doorGrp.add(plaque);
+
+          doorGrp.position.set(doorX, 0, exitZ);
+          worldGroup.add(doorGrp);
+          this.doorMeshes.push({ index: i, group: doorGrp, x: doorX, z: exitZ });
+        }
+
+        // Bird's-Eye Overhead Top-Down Camera looking forward-upwards
+        camera.position.set(0, 18.0, -5.5);
+        camera.lookAt(0, 0.8, 5.5);
+
+        document.getElementById('hud-goal-label').textContent = '🧭 迷宮指引：';
+        document.getElementById('hud-counter').innerHTML = '<b style="color:#38bdf8;">一律往上走 ⬆ 4選1</b>';
+      },
+
+      clear() {
+        while (worldGroup.children.length > 0) worldGroup.remove(worldGroup.children[0]);
+        this.doorMeshes = [];
+        this.mazeWalls = [];
+      },
+
+      buildComplexLabyrinth() {
+        // High-End Garden & Palace Sandstone Walls (暖砂岩牆體 + 深胡桃木頂蓋・告別刺眼死藍)
+        const wallMat = new THREE.MeshStandardMaterial({ color: 0xdfbc94, roughness: 0.55, metalness: 0.08 });
+        const capMat = new THREE.MeshStandardMaterial({ color: 0x5c3317, roughness: 0.35, metalness: 0.12 });
+
+        // Outer Boundaries
+        const outerL = new THREE.Mesh(new THREE.BoxGeometry(0.8, 3.0, this.depth + 10), wallMat);
+        outerL.position.set(-10.5, 1.5, this.depth / 2 - 2);
+        outerL.castShadow = true;
+        outerL.receiveShadow = true;
+        worldGroup.add(outerL);
+        const capOL = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.25, this.depth + 10), capMat);
+        capOL.position.set(-10.5, 3.12, this.depth / 2 - 2);
+        worldGroup.add(capOL);
+        this.mazeWalls.push({ minX: -10.9, maxX: -10.1, minZ: -6, maxZ: this.depth + 5 });
+
+        const outerR = outerL.clone();
+        outerR.position.x = 10.5;
+        worldGroup.add(outerR);
+        const capOR = capOL.clone();
+        capOR.position.x = 10.5;
+        worldGroup.add(capOR);
+        this.mazeWalls.push({ minX: 10.1, maxX: 10.9, minZ: -6, maxZ: this.depth + 5 });
+
+        // Start Back Barrier Wall (Cannot back out)
+        const backWall = new THREE.Mesh(new THREE.BoxGeometry(22.0, 3.0, 0.8), wallMat);
+        backWall.position.set(0, 1.5, -2.5);
+        backWall.castShadow = true;
+        backWall.receiveShadow = true;
+        worldGroup.add(backWall);
+        const capBW = new THREE.Mesh(new THREE.BoxGeometry(22.0, 0.25, 1.0), capMat);
+        capBW.position.set(0, 3.12, -2.5);
+        worldGroup.add(capBW);
+        this.mazeWalls.push({ minX: -11.0, maxX: 11.0, minZ: -2.9, maxZ: -2.1 });
+
+        // Intricate Maze Partitions (Winding, T-junctions, Crossroads, All passages >= 2.6 units)
+        const partitions = [
+          // --- Zone 1: Entry Split & Winding Baffles (Z = 6 ~ 20) ---
+          { x: 0, z: 8, w: 1.0, d: 7.0 },             // Center split from start
+          { x: -5.5, z: 13, w: 5.6, d: 0.8 },         // Left baffle (gap at outer left x = -9)
+          { x: 5.5, z: 13, w: 5.6, d: 0.8 },          // Right baffle (gap at center right x = +2)
+          { x: -7.0, z: 19, w: 6.2, d: 0.8 },         // Left crossbar (gap at x = -2.5)
+          { x: 2.2, z: 19, w: 7.0, d: 0.8 },          // Right crossbar (gap at x = +7.5)
+
+          // --- Zone 2: Multi-Branch Crossroads & Central Diamond (Z = 22 ~ 36) ---
+          { x: -4.5, z: 25, w: 1.8, d: 1.8 },         // Left pillar
+          { x: 4.5, z: 25, w: 1.8, d: 1.8 },          // Right pillar
+          { x: 0, z: 29, w: 4.6, d: 4.6 },            // Central Island
+          { x: -7.6, z: 31, w: 5.0, d: 0.8 },         // Left bypass filter
+          { x: 7.6, z: 31, w: 5.0, d: 0.8 },          // Right bypass filter
+          { x: -5.0, z: 36, w: 6.8, d: 0.8 },         // Cross connector left
+          { x: 5.0, z: 36, w: 6.8, d: 0.8 },          // Cross connector right (gap in middle: -1.6 to +1.6)
+
+          // --- Zone 3: Sieve & Forking Corridors (Z = 38 ~ 52) ---
+          { x: 0, z: 42, w: 0.8, d: 8.0 },            // Center dividing spine
+          { x: -4.8, z: 45, w: 0.8, d: 9.0 },         // Divider Lane 1 & 2
+          { x: 4.8, z: 45, w: 0.8, d: 9.0 },          // Divider Lane 3 & 4
+          { x: -2.4, z: 43, w: 3.8, d: 0.8 },         // Chicane gate left
+          { x: 2.4, z: 47, w: 3.8, d: 0.8 },          // Chicane gate right
+
+          // --- Zone 4: Final 4 Channels to Doors 1 ~ 4 (Z = 53 ~ 64) ---
+          // Door 1 at X = -6.75, Door 2 at X = -2.25, Door 3 at X = +2.25, Door 4 at X = +6.75
+          { x: -4.5, z: 58, w: 0.6, d: 12.0 },        // Barrier separating Door 1 & Door 2
+          { x: 0.0, z: 58, w: 0.6, d: 12.0 },         // Barrier separating Door 2 & Door 3
+          { x: 4.5, z: 58, w: 0.6, d: 12.0 }          // Barrier separating Door 3 & Door 4
+        ];
+
+        partitions.forEach(p => {
+          const mesh = new THREE.Mesh(new THREE.BoxGeometry(p.w, 2.4, p.d), wallMat);
+          mesh.position.set(p.x, 1.2, p.z);
+          mesh.castShadow = true;
+          mesh.receiveShadow = true;
+          worldGroup.add(mesh);
+
+          // Rich Walnut Coping Top
+          const cap = new THREE.Mesh(new THREE.BoxGeometry(p.w + 0.16, 0.22, p.d + 0.16), capMat);
+          cap.position.set(p.x, 2.45, p.z);
+          worldGroup.add(cap);
+
+          this.mazeWalls.push({
+            minX: p.x - p.w / 2,
+            maxX: p.x + p.w / 2,
+            minZ: p.z - p.d / 2,
+            maxZ: p.z + p.d / 2
+          });
+        });
+      },
+
+      invertHorizontal: true,
+      setMoveInput(x, z) {
+        // 修正玩家反饋：左右控制顛倒。依需求反轉水平 X 軸，並支援即時切換
+        const finalX = this.invertHorizontal ? -x : x;
+        this.moveDir.set(finalX, z);
+      },
+
+      update(dt) {
+        if (!isPlaying) return;
+
+        const speed = 9.2;
+        let inputX = this.moveDir.x;
+        let inputZ = this.moveDir.y;
+        const len = Math.hypot(inputX, inputZ);
+        if (len > 1) {
+          inputX /= len;
+          inputZ /= len;
+        }
+
+        let newX = this.playerPos.x + inputX * speed * dt;
+        let newZ = this.playerPos.z + inputZ * speed * dt;
+        const playerRadius = 0.38;
+
+        // Smooth Circle-Box Sliding Collision (Zero Locking / 絕對不卡死)
+        for (let iter = 0; iter < 4; iter++) {
+          for (let w of this.mazeWalls) {
+            const cx = THREE.MathUtils.clamp(newX, w.minX, w.maxX);
+            const cz = THREE.MathUtils.clamp(newZ, w.minZ, w.maxZ);
+            const dx = newX - cx;
+            const dz = newZ - cz;
+            const distSq = dx * dx + dz * dz;
+
+            if (distSq < playerRadius * playerRadius) {
+              const dist = Math.sqrt(distSq);
+              if (dist > 0.0001) {
+                const overlap = playerRadius - dist;
+                newX += (dx / dist) * overlap;
+                newZ += (dz / dist) * overlap;
+              } else {
+                // Inside the box: push out along closest edge
+                const dL = Math.abs(newX - w.minX);
+                const dR = Math.abs(w.maxX - newX);
+                const dT = Math.abs(newZ - w.minZ);
+                const dB = Math.abs(w.maxZ - newZ);
+                const minD = Math.min(dL, dR, dT, dB);
+                if (minD === dL) newX = w.minX - playerRadius;
+                else if (minD === dR) newX = w.maxX + playerRadius;
+                else if (minD === dT) newZ = w.minZ - playerRadius;
+                else newZ = w.maxZ + playerRadius;
+              }
+            }
+          }
+        }
+
+        this.playerPos.x = THREE.MathUtils.clamp(newX, -9.8, 9.8);
+        this.playerPos.z = THREE.MathUtils.clamp(newZ, -1.8, this.depth + 2);
+
+        playerContainer.position.set(this.playerPos.x, 0.8, this.playerPos.z);
+        if (len > 0.1) {
+          // In Three.js bird's-eye view looking along +Z:
+          // Forward (+Z / UP) is 0 rad, Right (+X) is +PI/2, Left (-X) is -PI/2
+          playerContainer.rotation.y = Math.atan2(inputX, inputZ);
+        }
+
+        // Bird's-Eye Overhead Camera smoothly scrolls along with player towards top (+Z)
+        camera.position.x = this.playerPos.x * 0.35;
+        camera.position.y = 18.0;
+        camera.position.z = this.playerPos.z - 5.5;
+        camera.lookAt(this.playerPos.x * 0.35, 0.8, this.playerPos.z + 5.5);
+
+        // Check door entry
+        if (this.playerPos.z >= this.depth - 1.2) {
+          let chosenDoor = null;
+          let minDist = 999;
+          for (let d of this.doorMeshes) {
+            const dist = Math.abs(d.x - this.playerPos.x);
+            if (dist < minDist) {
+              minDist = dist;
+              chosenDoor = d;
+            }
+          }
+
+          if (chosenDoor && minDist < 2.5) {
+            if (chosenDoor.index === this.luckyDoorIndex) {
+              sound.playVictory();
+              if (window.confetti) window.confetti({ particleCount: 140, spread: 85 });
+              showResultModal(true, `🎉 神之直覺！你選擇了【第 ${chosenDoor.index} 號出口】，正是藏有【${getCapeName(currentCape)}】的天命寶箱門！已成功收入囊中！`);
+            } else {
+              sound.playFail();
+              showResultModal(false, `💨 哎呀！你穿過了【第 ${chosenDoor.index} 號出口】，但這扇門後是空的～（正確的寶箱門是第 ${this.luckyDoorIndex} 號）挑戰失敗，退出副本！`);
+            }
+          }
+        }
+      }
+    };
+
+    // --- Helpers ---
+    function getCapeName(type) {
+      if (type === 'sulley') return '毛怪角角懸空魔帽 (+25%防禦)';
+      if (type === 'mike') return '大眼仔招牌單眼安全帽 (+50%吸寶)';
+      if (type === 'boo') return '阿布雙彈簧眼萌帽 (+30%成長)';
+      return '藍道高科技隱形戰冠 (10s隱身)';
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2600);
+    }
+
+    function showResultModal(isSuccess, text) {
+      isPlaying = false;
+      lastResultSuccess = isSuccess;
+      const modal = document.getElementById('result-modal');
+      const icon = document.getElementById('res-icon');
+      const title = document.getElementById('res-title');
+      const desc = document.getElementById('res-desc');
+      const actBtn = document.getElementById('btn-res-action');
+
+      if (isSuccess) {
+        icon.textContent = '🎉';
+        title.textContent = '副本通關大獲全勝！';
+        title.style.color = '#38bdf8';
+        actBtn.className = 'btn-hero';
+        actBtn.textContent = '🎩 穿戴此裝備・繼續暢遊';
+      } else {
+        icon.textContent = '💔';
+        title.textContent = '副本挑戰失敗！';
+        title.style.color = '#ef4444';
+        actBtn.className = 'btn-hero btn-fail';
+        actBtn.textContent = '🚪 退出副本・返回主場';
+      }
+      desc.textContent = text;
+      modal.classList.remove('hidden');
+    }
+
+    function switchMode(newMode) {
+      isPlaying = false;
+      document.getElementById('result-modal').classList.add('hidden');
+      snakeEngine.clear();
+      runnerEngine.clear();
+      mazeEngine.clear();
+
+      currentMode = newMode;
+      updateCityEnvironment(newMode);
+      document.querySelectorAll('.dtab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === newMode);
+      });
+
+      const dpad = document.getElementById('mobile-dpad');
+      const joy = document.getElementById('mobile-joy');
+      const actions = document.getElementById('mobile-actions');
+      const title = document.getElementById('hud-dungeon-name');
+      const btnInvert = document.getElementById('btn-toggle-invert');
+
+      if (newMode === 'snake') {
+        title.textContent = '🐍 副本 1：經典貪吃蛇';
+        dpad.style.display = 'block';
+        joy.style.display = 'none';
+        actions.style.display = 'none';
+        if (btnInvert) btnInvert.style.display = 'none';
+        snakeEngine.init();
+      } else if (newMode === 'runner') {
+        title.textContent = '🏃 副本 2：橫幅跳躍吃星星';
+        dpad.style.display = 'none';
+        joy.style.display = 'none';
+        actions.style.display = 'flex';
+        challengeTimer = 25.0;
+        if (btnInvert) btnInvert.style.display = 'none';
+        runnerEngine.init();
+      } else { // maze
+        title.textContent = '🧭 副本 3：精緻滾動迷宮';
+        dpad.style.display = 'block';
+        joy.style.display = 'flex';
+        actions.style.display = 'none';
+        if (btnInvert) btnInvert.style.display = 'block';
+        mazeEngine.init();
+      }
+
+      openStartModal();
+    }
+
+    function openStartModal() {
+      isPlaying = false;
+      const modal = document.getElementById('start-modal');
+      const icon = document.getElementById('start-modal-icon');
+      const title = document.getElementById('start-modal-title');
+      const desc = document.getElementById('start-modal-desc');
+
+      if (currentMode === 'snake') {
+        icon.textContent = '🐍';
+        title.textContent = '副本 1：經典貪吃蛇（小範圍0.68X）';
+        desc.innerHTML = `
+          【純粹經典貪吃蛇・場地縮小 0.68X 好掌控】！<br>
+          場上散落著 <b>18 顆發光能量豆</b>，蛇身走速適中。<br>
+          當吃滿 <b>10 顆能量豆</b> 時，場上將<b>隨機降臨怪獸魔帽</b>！<br>
+          蛇頭<b>有吃到就有</b>直接獲勝帶走！撞牆或咬到自己身體則失敗退出。
+        `;
+      } else if (currentMode === 'runner') {
+        icon.textContent = '🏃';
+        title.textContent = '副本 2：橫幅跳躍吃星星';
+        desc.innerHTML = `
+          【2.5D 橫向跑酷・捲動慢 0.8X】！<br>
+          ⭐ <b>金黃星星</b>：吃一顆 +1 收集進度！<br>
+          🟣 <b>負面暗星</b>：吃一顆 -1 扣除進度，請跳躍避開！<br>
+          在 <b>25 秒限時內吃滿 10 顆星星</b> 即可解鎖限定道具！
+        `;
+      } else {
+        icon.textContent = '🧭';
+        title.textContent = '副本 3：精緻滾動迷宮（4個出口）';
+        desc.innerHTML = `
+          【方向指引：請一律往上走 ⬆】<br>
+          你從螢幕下方的起點出發，<b>按向上鍵（W / ⬆ / 搖桿往上）</b>直奔最頂部的 <b>4 扇傳送門</b>！<br>
+          走道全面拓寬且佈滿曲折叉路與導引箭頭，<b>4 個出口中只有 1 扇藏有限定魔帽</b>，其餘皆為空門，考驗你的直覺！
+        `;
+      }
+      modal.classList.remove('hidden');
+    }
+
+    // --- Event Listeners ---
+    document.getElementById('dungeon-tabs').addEventListener('click', (e) => {
+      const btn = e.target.closest('.dtab-btn');
+      if (btn) switchMode(btn.dataset.mode);
+    });
+
+    document.getElementById('btn-start-challenge').addEventListener('click', () => {
+      sound.init();
+      document.getElementById('start-modal').classList.add('hidden');
+      isPlaying = true;
+      if (currentMode === 'snake') snakeEngine.init();
+      else if (currentMode === 'runner') runnerEngine.init();
+      else mazeEngine.init();
+    });
+
+    document.getElementById('btn-res-action').addEventListener('click', () => {
+      document.getElementById('result-modal').classList.add('hidden');
+      if (isInsideFrame) {
+        window.parent.postMessage({
+          type: 'DUNGEON_RESULT',
+          success: lastResultSuccess,
+          cape: currentCape
+        }, '*');
+        return;
+      }
+      isPlaying = true;
+      if (currentMode === 'snake') snakeEngine.init();
+      else if (currentMode === 'runner') runnerEngine.init();
+      else mazeEngine.init();
+    });
+
+    const btnReturnMain = document.getElementById('btn-return-main');
+    if (btnReturnMain) {
+      btnReturnMain.addEventListener('click', () => {
+        if (isInsideFrame) {
+          window.parent.postMessage({ type: 'DUNGEON_CLOSE' }, '*');
+        } else {
+          window.location.href = './index.html';
+        }
+      });
+    }
+
+    document.getElementById('btn-res-retry').addEventListener('click', () => {
+      document.getElementById('result-modal').classList.add('hidden');
+      isPlaying = true;
+      if (currentMode === 'snake') snakeEngine.init();
+      else if (currentMode === 'runner') runnerEngine.init();
+      else mazeEngine.init();
+    });
+
+    // Drawer Toggle
+    const drawer = document.getElementById('char-drawer');
+    document.getElementById('btn-toggle-gear').addEventListener('click', () => {
+      drawer.classList.toggle('show');
+    });
+    document.getElementById('btn-close-drawer').addEventListener('click', () => {
+      drawer.classList.remove('show');
+    });
+
+    // Character & Cape Pickers
+    document.getElementById('row-chars').addEventListener('click', (e) => {
+      const btn = e.target.closest('.chip-btn');
+      if (!btn) return;
+      document.querySelectorAll('#row-chars .chip-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentChar = btn.dataset.char;
+      rebuildPlayer();
+    });
+
+    document.getElementById('row-capes').addEventListener('click', (e) => {
+      const btn = e.target.closest('.chip-btn');
+      if (!btn) return;
+      document.querySelectorAll('#row-capes .chip-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentCape = btn.dataset.cape;
+      rebuildPlayer();
+    });
+
+    // Sound Toggle
+    document.getElementById('btn-sound-toggle').addEventListener('click', () => {
+      sound.init();
+      sound.muted = !sound.muted;
+      document.getElementById('btn-sound-toggle').textContent = sound.muted ? '🔇 靜音' : '🔊 音效';
+    });
+
+    // Invert Horizontal Steering Toggle for Maze
+    const btnInvertElem = document.getElementById('btn-toggle-invert');
+    btnInvertElem.addEventListener('click', () => {
+      mazeEngine.invertHorizontal = !mazeEngine.invertHorizontal;
+      btnInvertElem.textContent = mazeEngine.invertHorizontal ? '🔄 左右：已反轉' : '🔄 左右：正常向';
+      showToast(mazeEngine.invertHorizontal ? '已切換為【左右反轉】操控模式！' : '已切換為【左右正常】操控模式！');
+    });
+
+    // Multi-key tracking for fluid 360° maze & runner keyboard control
+    const activeKeys = new Set();
+    function syncMazeKeyboard() {
+      if (currentMode !== 'maze') return;
+      let mx = 0, mz = 0;
+      if (activeKeys.has('KeyW') || activeKeys.has('ArrowUp')) mz += 1;
+      if (activeKeys.has('KeyS') || activeKeys.has('ArrowDown')) mz -= 1;
+      if (activeKeys.has('KeyA') || activeKeys.has('ArrowLeft')) mx -= 1;
+      if (activeKeys.has('KeyD') || activeKeys.has('ArrowRight')) mx += 1;
+      mazeEngine.setMoveInput(mx, mz);
+    }
+
+    // Keyboard Controls
+    window.addEventListener('keydown', (e) => {
+      sound.init();
+      activeKeys.add(e.code);
+      const code = e.code;
+      if (currentMode === 'snake') {
+        if (code === 'KeyW' || code === 'ArrowUp') snakeEngine.setDirection(0, -1);
+        else if (code === 'KeyS' || code === 'ArrowDown') snakeEngine.setDirection(0, 1);
+        else if (code === 'KeyA' || code === 'ArrowLeft') snakeEngine.setDirection(-1, 0);
+        else if (code === 'KeyD' || code === 'ArrowRight') snakeEngine.setDirection(1, 0);
+      } else if (currentMode === 'runner') {
+        if (code === 'Space' || code === 'ArrowUp' || code === 'KeyW') {
+          runnerEngine.jump();
+        }
+      } else if (currentMode === 'maze') {
+        syncMazeKeyboard();
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      activeKeys.delete(e.code);
+      if (currentMode === 'maze') {
+        syncMazeKeyboard();
+      }
+    });
+
+    // Unified D-Pad for Snake & Maze
+    function bindDPadButton(id, dirX, dirZ) {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      const start = (e) => {
+        e.preventDefault();
+        sound.init();
+        if (currentMode === 'snake') {
+          snakeEngine.setDirection(dirX, dirZ);
+        } else if (currentMode === 'maze') {
+          // Up (dirZ=-1) moves forward (+Z), Down (dirZ=1) moves backward (-Z)
+          mazeEngine.setMoveInput(dirX, -dirZ);
+        }
+      };
+      const end = (e) => {
+        if (currentMode === 'maze') {
+          mazeEngine.setMoveInput(0, 0);
+        }
+      };
+      btn.addEventListener('touchstart', start, { passive: false });
+      btn.addEventListener('touchend', end);
+      btn.addEventListener('mousedown', start);
+      btn.addEventListener('mouseup', end);
+      btn.addEventListener('mouseleave', end);
+    }
+
+    bindDPadButton('btn-dp-up', 0, -1);
+    bindDPadButton('btn-dp-down', 0, 1);
+    bindDPadButton('btn-dp-left', -1, 0);
+    bindDPadButton('btn-dp-right', 1, 0);
+
+    // Onscreen Jump Button for Runner
+    const btnJump = document.getElementById('btn-mobile-jump');
+    btnJump.addEventListener('touchstart', (e) => { e.preventDefault(); sound.init(); runnerEngine.jump(); });
+    btnJump.addEventListener('click', () => { sound.init(); runnerEngine.jump(); });
+
+    // Virtual Joystick for Maze (Touch & Mouse Support)
+    const joyElem = document.getElementById('mobile-joy');
+    const stickElem = document.getElementById('joy-stick');
+    let joyTouchId = null;
+    let joyCenter = { x: 0, y: 0 };
+    let isJoyMouseDown = false;
+
+    function handleJoyMove(clientX, clientY) {
+      const dx = clientX - joyCenter.x;
+      const dy = clientY - joyCenter.y;
+      const dist = Math.hypot(dx, dy);
+      const maxR = 34;
+      const clampedDist = Math.min(dist, maxR);
+      const angle = Math.atan2(dy, dx);
+      const sx = Math.cos(angle) * clampedDist;
+      const sy = Math.sin(angle) * clampedDist;
+      stickElem.style.transform = `translate(${sx}px, ${sy}px)`;
+
+      if (currentMode === 'maze') {
+        // Dragging UP gives negative sy, which moves player forward (+Z / UP)
+        mazeEngine.setMoveInput(sx / maxR, -sy / maxR);
+      }
+    }
+
+    joyElem.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      sound.init();
+      const touch = e.changedTouches[0];
+      joyTouchId = touch.identifier;
+      const rect = joyElem.getBoundingClientRect();
+      joyCenter = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    });
+
+    window.addEventListener('touchmove', (e) => {
+      if (joyTouchId === null) return;
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const t = e.changedTouches[i];
+        if (t.identifier === joyTouchId) {
+          handleJoyMove(t.clientX, t.clientY);
+        }
+      }
+    }, { passive: false });
+
+    // Mouse drag support for desktop
+    joyElem.addEventListener('mousedown', (e) => {
+      isJoyMouseDown = true;
+      sound.init();
+      const rect = joyElem.getBoundingClientRect();
+      joyCenter = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+      handleJoyMove(e.clientX, e.clientY);
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isJoyMouseDown) return;
+      handleJoyMove(e.clientX, e.clientY);
+    });
+
+    function resetJoystick() {
+      joyTouchId = null;
+      isJoyMouseDown = false;
+      stickElem.style.transform = 'translate(0px, 0px)';
+      if (currentMode === 'maze') mazeEngine.setMoveInput(0, 0);
+    }
+    window.addEventListener('touchend', (e) => {
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === joyTouchId) resetJoystick();
+      }
+    });
+    window.addEventListener('touchcancel', resetJoystick);
+    window.addEventListener('mouseup', () => {
+      if (isJoyMouseDown) resetJoystick();
+    });
+
+    // Resize Handler
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // --- Main Game Loop ---
+    let lastTime = performance.now();
+    function animate(now) {
+      requestAnimationFrame(animate);
+      const dt = Math.min((now - lastTime) / 1000, 0.1);
+      lastTime = now;
+
+      // Hat Bobbing & Aura Spin
+      const hatGroup = playerContainer.getObjectByName('floatingHatGroup');
+      if (hatGroup) {
+        hatGroup.children.forEach(c => {
+          if (c.geometry && c.geometry.type === 'TorusGeometry') {
+            c.rotation.z += 2.0 * dt;
+          } else {
+            c.position.y = 1.32 + Math.sin(now * 0.005) * 0.06;
+            c.rotation.y += 0.8 * dt;
+          }
+        });
+      }
+
+      // Cloud drift across sunny blue sky (matching main game atmosphere)
+      if (cityEnvGroup) {
+        cityEnvGroup.children.forEach(c => {
+          if (c.userData.isCloud) {
+            c.position.x += 1.2 * dt;
+            if (c.position.x > 80) c.position.x = -80;
+          }
+        });
+      }
+
+      if (currentMode === 'snake') {
+        snakeEngine.update(dt);
+      } else if (currentMode === 'runner') {
+        runnerEngine.update(dt);
+      } else if (currentMode === 'maze') {
+        mazeEngine.update(dt);
+      }
+
+      renderer.render(scene, camera);
+    }
+    requestAnimationFrame(animate);
+
+    // Initial Start (using URL query mode if provided)
+    switchMode(currentMode);
+  </script>
+</body>
+</html>
