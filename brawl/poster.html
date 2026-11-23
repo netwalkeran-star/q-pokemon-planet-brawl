@@ -251,15 +251,15 @@
 
       const lmTaipei = pickLandmark(taipei, 0); // Taipei 101 (Back Left)
       lmTaipei.scale.setScalar(0.58);
-      placeOnTopGlobe(lmTaipei, -7.8, -4.6, 0.0, 0.25);
+      placeOnTopGlobe(lmTaipei, -8.2, -4.6, 0.0, 0.25);
 
-      const lmKyoto = pickLandmark(kyoto, 0); // Kyoto Landmark (Back Center)
-      lmKyoto.scale.setScalar(0.68);
-      placeOnTopGlobe(lmKyoto, 0, -5.8, 0.0, 0);
+      const lmKyoto = pickLandmark(kyoto, 0); // Kyoto Golden Pavilion (Visible between Taipei & Gengar)
+      lmKyoto.scale.setScalar(0.72);
+      placeOnTopGlobe(lmKyoto, -4.1, -3.6, 0.0, 0.15);
 
       const lmShanghai = pickLandmark(shanghai, 0); // Oriental Pearl Tower (Back Right)
       lmShanghai.scale.setScalar(0.58);
-      placeOnTopGlobe(lmShanghai, 7.8, -4.6, 0.0, -0.25);
+      placeOnTopGlobe(lmShanghai, 8.0, -4.6, 0.0, -0.25);
 
       // Add 3D Fireworks bursting cleanly in the upper-side sky!
       function addFireworkBurst(x, y, z, color1, color2) {
@@ -287,9 +287,9 @@
       addFireworkBurst(-9.5, 23.8, -9.5, 0xfacc15, 0x34d399);
       addFireworkBurst(9.5, 23.8, -9.5, 0x38bdf8, 0xf43f5e);
 
-      // Fluffy 3D clouds in upper sky
+      // Fluffy 3D clouds tucked cleanly on far left/right so the center title sky stays spotless
       const cloudMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 });
-      [[-13.5, 22.8, -12], [13.5, 22.8, -12], [-5.5, 25.5, -16], [5.5, 25.5, -16]].forEach(([x, y, z]) => {
+      [[-14.5, 22.8, -12], [14.5, 22.8, -12], [-12.5, 25.2, -16], [12.5, 25.2, -16]].forEach(([x, y, z]) => {
         const cg = new THREE.Group();
         [[-0.9, 0, 0, 0.9], [0, 0.35, 0, 1.2], [0.95, 0.05, 0, 0.85]].forEach(([cx, cy, cz, cr]) => {
           const puff = new THREE.Mesh(new THREE.SphereGeometry(cr, 14, 12), cloudMat);
@@ -307,7 +307,7 @@
         { species: 'squirtle',   x:  3.1, z: 3.9, scale: 1.26, yOff: 0.00, yaw: -0.22 }, // Front Right
         { species: 'bulbasaur',  x: -6.1, z: 2.3, scale: 1.24, yOff: 0.00, yaw:  0.34 }, // Wing Left
         { species: 'falinks',    x:  6.1, z: 2.3, scale: 1.24, yOff: 0.00, yaw: -0.34 }, // Wing Right (Eevee)
-        { species: 'gengar',     x:  0.0, z: 0.6, scale: 1.32, yOff: 2.35, yaw:  0.00 }  // Hovering Above-Back
+        { species: 'gengar',     x:  0.0, z: 0.6, scale: 1.32, yOff: 2.95, yaw:  0.00 }  // Hovering Above-Back cleanly above Pikachu ears
       ];
 
       heroConfigs.forEach((h, idx) => {
