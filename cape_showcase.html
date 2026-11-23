@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>怪獸電力公司・寶可夢連帽披肩 3D 試衣間</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 30%, #1e293b 0%, #090d16 100%);
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft JhengHei", sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    #canvas-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Top Bar Header */
+    .top-header {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      right: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .header-pill {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      padding: 6px 14px;
+      border-radius: 99px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      pointer-events: auto;
+    }
+    .header-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #38bdf8;
+      letter-spacing: 0.5px;
+    }
+    .tag-scale {
+      background: #eab308;
+      color: #000;
+      font-size: 11px;
+      font-weight: 900;
+      padding: 2px 7px;
+      border-radius: 6px;
+    }
+    .hint-chip {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 99px;
+      padding: 5px 12px;
+      font-size: 12px;
+      color: #94a3b8;
+      pointer-events: auto;
+    }
+
+    /* Floating View Controls (Right side) */
+    .view-controls {
+      position: absolute;
+      right: 14px;
+      top: 64px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 10;
+    }
+    .view-btn {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #e2e8f0;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      transition: all 0.15s ease;
+    }
+    .view-btn:active {
+      transform: scale(0.92);
+      border-color: #38bdf8;
+    }
+
+    /* Bottom Control Dock */
+    .bottom-dock {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(96vw, 780px);
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(20px);
+      border: 1.5px solid rgba(255, 255, 255, 0.15);
+      border-radius: 22px;
+      padding: 10px 14px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65);
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .dock-row-label {
+      font-size: 11px;
+      font-weight: 800;
+      color: #94a3b8;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .dock-row-label b {
+      color: #38bdf8;
+    }
+
+    .btn-scroll-row {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 2px;
+    }
+    .btn-scroll-row::-webkit-scrollbar { display: none; }
+
+    .selector-btn {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1.5px solid rgba(255, 255, 255, 0.15);
+      color: #f1f5f9;
+      padding: 7px 12px;
+      border-radius: 12px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+    .selector-btn:hover {
+      border-color: #38bdf8;
+      transform: translateY(-2px);
+    }
+    .selector-btn.active {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      border-color: #38bdf8;
+      color: #fff;
+      box-shadow: 0 0 14px rgba(56, 189, 248, 0.5);
+    }
+
+    /* Cape Info Banner */
+    .info-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(30, 41, 59, 0.6);
+      border-radius: 10px;
+      padding: 6px 12px;
+      font-size: 11.5px;
+      border-left: 3.5px solid #38bdf8;
+    }
+    .info-desc { color: #cbd5e1; }
+    .info-buff {
+      color: #4ade80;
+      font-weight: 800;
+      white-space: nowrap;
+      margin-left: 10px;
+    }
+
+    @media (max-height: 600px) {
+      .bottom-dock {
+        padding: 6px 10px;
+        gap: 5px;
+        bottom: 6px;
+      }
+      .selector-btn {
+        padding: 5px 10px;
+        font-size: 11.5px;
+      }
+      .info-bar {
+        padding: 4px 8px;
+        font-size: 10.5px;
+      }
+    }
+  </style>
+  <!-- Three.js CDN -->
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+</head>
+<body>
+  <div class="top-header">
+    <div class="header-pill">
+      <span class="header-title">🏭 怪獸電力公司・連帽披肩 3D 試衣間</span>
+      <span class="tag-scale">隊長主體 1.3X 等比放大</span>
+    </div>
+    <div class="hint-chip">
+      🖱️ 單指拖曳 360° 旋轉｜雙指縮放
+    </div>
+  </div>
+
+  <div class="view-controls">
+    <button class="view-btn" id="btn-reset-cam" title="視角回正">🎥</button>
+    <button class="view-btn" id="btn-toggle-spin" title="自動旋轉">🔄</button>
+  </div>
+
+  <div id="canvas-container"></div>
+
+  <div class="bottom-dock">
+    <!-- 1. Select Pokemon & Scale -->
+    <div>
+      <div class="dock-row-label" style="justify-content:space-between;">
+        <span>1. 選擇寶可夢隊長主體：</span>
+        <div style="display:flex; gap:6px;">
+          <button class="selector-btn active" id="btn-scale-156" style="padding:3px 8px; font-size:11px;">👑 1.56X (再加大1.2X)</button>
+          <button class="selector-btn" id="btn-scale-130" style="padding:3px 8px; font-size:11px;">1.3X 原加大</button>
+        </div>
+      </div>
+      <div class="btn-scroll-row" id="poke-btn-row">
+        <button class="selector-btn active" data-pokemon="pikachu">⚡ 皮卡丘</button>
+        <button class="selector-btn" data-pokemon="charmander">🔥 小火龍</button>
+        <button class="selector-btn" data-pokemon="squirtle">💧 傑尼龜</button>
+        <button class="selector-btn" data-pokemon="gengar">👻 耿鬼（完整大嘴獠牙）</button>
+        <button class="selector-btn" data-pokemon="falinks">🦊 伊布（蓬鬆鬃毛）</button>
+      </div>
+    </div>
+
+    <!-- 2. Select Redesigned Monsters Inc Floating Hat -->
+    <div>
+      <div class="dock-row-label">
+        <span>2. 裝備怪獸電力公司・<b>頭頂懸空魔幻帽子（浮空無穿模）</b></span>
+      </div>
+      <div class="btn-scroll-row" id="cape-btn-row">
+        <button class="selector-btn active" data-cape="sulley">🩵 毛怪角角懸空帽</button>
+        <button class="selector-btn" data-cape="mike">💚 大眼仔招牌單眼安全帽</button>
+        <button class="selector-btn" data-cape="boo">🌸 阿布雙彈簧眼萌帽</button>
+        <button class="selector-btn" data-cape="randall">🦎 藍道變色龍高科技冠帽</button>
+        <button class="selector-btn" data-cape="none">🚫 脫下帽子（純原版）</button>
+      </div>
+    </div>
+
+    <!-- Description & Stats -->
+    <div class="info-bar">
+      <span class="info-desc" id="info-desc">天藍毛絨貝雷帽懸空浮動於頭頂，兩側長出可愛白角與紫斑，底端環繞能量微光圈。</span>
+      <span class="info-buff" id="info-buff">🛡️ 防禦力 +25%｜防撞擊減傷</span>
+    </div>
+  </div>
+
+  <script>
+    // --- Cape/Hat Details ---
+    const CAPE_DETAILS = {
+      sulley: {
+        name: '毛怪角角懸空帽',
+        desc: '天藍色毛絨貝雷帽魔法懸浮於頭頂上方，帶有紫色斑點與一對白色小怪獸角，下方環繞青藍色能量光圈，絕不遮擋五官。',
+        buff: '🛡️ 防禦力 +25%｜防撞擊震退'
+      },
+      mike: {
+        name: '大眼仔招牌單眼安全帽',
+        desc: '怪獸電力公司經典鮮綠工廠安全帽！前方立體鑲嵌大眼仔標誌性水汪汪大眼球與小尖角，自帶翠綠能量微光圈。',
+        buff: '🧲 引力吸寶半徑 +50%｜視野更開闊'
+      },
+      boo: {
+        name: '阿布雙彈簧眼萌帽',
+        desc: '怪獸電力公司阿布偽裝怪獸紫帽！帽緣帶有白色小尖牙，頂端立著兩支金色彈簧雙眼球，隨著角色移動俏皮晃動。',
+        buff: '⚡ 移動速度 +15%｜衝刺冷卻 -1秒'
+      },
+      randall: {
+        name: '藍道變色龍高科技冠帽',
+        desc: '金屬紫藍漸層變色龍高科技懸浮戰冠，頂部帶有三組流線背鰭與霓虹光束，具備未來感粒子懸浮光效。',
+        buff: '👻 開局自動隱身 10秒｜免受偷襲'
+      },
+      none: {
+        name: '純原版（未穿戴帽子）',
+        desc: '展示原汁原味遊戲角色模型，已等比放大 1.3X 突出霸氣隊長氣勢。',
+        buff: '無屬性加成'
+      }
+    };
+
+    // --- Three.js Setup ---
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+
+    // Camera setup - vertically centered above the bottom dock
+    const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 100);
+    // Focus target at y = 1.45 so full character + floating hat sits squarely in upper center!
+    const targetLookAt = new THREE.Vector3(0, 1.45, 0);
+    camera.position.set(0, 1.85, 4.4);
+    camera.lookAt(targetLookAt);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    // Studio Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.95);
+    scene.add(ambientLight);
+
+    const dirLight = new THREE.DirectionalLight(0xfff8e7, 2.4);
+    dirLight.position.set(5, 9, 6);
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.width = 1024;
+    dirLight.shadow.mapSize.height = 1024;
+    scene.add(dirLight);
+
+    const rimLight = new THREE.DirectionalLight(0x38bdf8, 1.8);
+    rimLight.position.set(-5, 4, -4);
+    scene.add(rimLight);
+
+    const floorLight = new THREE.DirectionalLight(0xa855f7, 0.8);
+    floorLight.position.set(0, -4, 2);
+    scene.add(floorLight);
+
+    // Pedestal Stage
+    const stageGroup = new THREE.Group();
+    scene.add(stageGroup);
+
+    const stageGeo = new THREE.CylinderGeometry(1.65, 1.85, 0.22, 48);
+    const stageMat = new THREE.MeshStandardMaterial({
+      color: 0x1e293b,
+      metalness: 0.5,
+      roughness: 0.35
+    });
+    const stage = new THREE.Mesh(stageGeo, stageMat);
+    stage.position.y = -0.11;
+    stage.receiveShadow = true;
+    stageGroup.add(stage);
+
+    // Neon Glow Ring on Stage
+    const neonGeo = new THREE.TorusGeometry(1.68, 0.04, 16, 64);
+    const neonMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+    const neon = new THREE.Mesh(neonGeo, neonMat);
+    neon.rotation.x = Math.PI / 2;
+    neon.position.y = 0.01;
+    stageGroup.add(neon);
+
+    // Character Root
+    const characterRoot = new THREE.Group();
+    scene.add(characterRoot);
+
+    // Helpers for exact Pokémon Meshes
+    function makeMat(hex, rough = 0.35) {
+      return new THREE.MeshStandardMaterial({ color: hex, roughness: rough, metalness: 0.08 });
+    }
+
+    function addAnimeEyes(headGroup, yPos, zPos, xSpread, isGengar = false) {
+      const whiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      const pupilMat = new THREE.MeshBasicMaterial({ color: isGengar ? 0xff1744 : 0x1a1a1a });
+      const irisMat = new THREE.MeshBasicMaterial({ color: isGengar ? 0xd50000 : 0x3b2314 });
+
+      [-1, 1].forEach((side) => {
+        const eyeGrp = new THREE.Group();
+        if (isGengar) {
+          const eyeMesh = new THREE.Mesh(new THREE.ConeGeometry(0.28, 0.45, 3), pupilMat);
+          eyeMesh.rotation.z = side * 0.5;
+          eyeMesh.rotation.x = Math.PI / 2;
+          eyeGrp.add(eyeMesh);
+
+          const shine = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 8), whiteMat);
+          shine.position.set(0.05 * side, 0.06, 0.14);
+          eyeGrp.add(shine);
+        } else {
+          const darkBase = new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 14), pupilMat);
+          darkBase.scale.set(0.95, 1.15, 0.55);
+          eyeGrp.add(darkBase);
+
+          const lowerIris = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 12), irisMat);
+          lowerIris.position.set(0, -0.04, 0.05);
+          lowerIris.scale.set(0.9, 0.8, 0.4);
+          eyeGrp.add(lowerIris);
+
+          const hi1 = new THREE.Mesh(new THREE.SphereGeometry(0.085, 10, 10), whiteMat);
+          hi1.position.set(0.05 * side, 0.08, 0.1);
+          eyeGrp.add(hi1);
+
+          const hi2 = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 8), whiteMat);
+          hi2.position.set(-0.04 * side, -0.07, 0.1);
+          eyeGrp.add(hi2);
+        }
+
+        eyeGrp.position.set(side * xSpread, yPos, zPos);
+        eyeGrp.rotation.y = side * 0.25;
+        headGroup.add(eyeGrp);
+      });
+    }
+
+    // --- Build Full Exact Pokémon Mesh (Scalable 1.3X) ---
+    function buildRealPokemon(species) {
+      const root = new THREE.Group();
+      const rig = new THREE.Group();
+      root.add(rig);
+
+      const headGroup = new THREE.Group();
+      const torsoGroup = new THREE.Group();
+      const leftArm = new THREE.Group();
+      const rightArm = new THREE.Group();
+      const leftLeg = new THREE.Group();
+      const rightLeg = new THREE.Group();
+      const tailGroup = new THREE.Group();
+
+      rig.add(torsoGroup, headGroup, leftArm, rightArm, leftLeg, rightLeg, tailGroup);
+
+      if (species === 'pikachu') {
+        const yellowMat = makeMat(0xffdc26);
+        const brownMat = makeMat(0x7a4419);
+        const cheekMat = makeMat(0xff2e2e, 0.2);
+        const noseMat = new THREE.MeshBasicMaterial({ color: 0x222222 });
+        const mouthMat = new THREE.MeshBasicMaterial({ color: 0xff6b81 });
+
+        const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.55, 0.55, 12, 18), yellowMat);
+        torso.position.y = 0.85;
+        torso.scale.set(1.05, 1.0, 0.95);
+        torsoGroup.add(torso);
+
+        [1.05, 0.72].forEach((y) => {
+          const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.14, 0.22), brownMat);
+          stripe.position.set(0, y, -0.48);
+          torsoGroup.add(stripe);
+        });
+
+        headGroup.position.set(0, 1.65, 0.12);
+        const cranium = new THREE.Mesh(new THREE.SphereGeometry(0.66, 22, 18), yellowMat);
+        cranium.scale.set(1.08, 0.96, 1.02);
+        headGroup.add(cranium);
+
+        [-1, 1].forEach((side) => {
+          const pouch = new THREE.Mesh(new THREE.SphereGeometry(0.19, 12, 12), cheekMat);
+          pouch.position.set(side * 0.56, -0.14, 0.44);
+          pouch.scale.set(0.9, 0.9, 0.45);
+          headGroup.add(pouch);
+        });
+
+        const nose = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 8), noseMat);
+        nose.position.set(0, -0.02, 0.68);
+        headGroup.add(nose);
+
+        const mouth = new THREE.Mesh(new THREE.SphereGeometry(0.11, 10, 10), mouthMat);
+        mouth.position.set(0, -0.18, 0.64);
+        mouth.scale.set(1.2, 0.7, 0.4);
+        headGroup.add(mouth);
+
+        addAnimeEyes(headGroup, 0.12, 0.58, 0.34);
+
+        // Long Ears
+        [-1, 1].forEach((side) => {
+          const earPivot = new THREE.Group();
+          earPivot.position.set(side * 0.38, 0.52, 0.0);
+          earPivot.rotation.z = -side * 0.45;
+          earPivot.rotation.x = -0.18;
+
+          const earLower = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.18, 0.65, 12), yellowMat);
+          earLower.position.y = 0.32;
+          const earTip = new THREE.Mesh(new THREE.ConeGeometry(0.13, 0.42, 12), makeMat(0x1a1a1a));
+          earTip.position.y = 0.78;
+          earPivot.add(earLower, earTip);
+          headGroup.add(earPivot);
+        });
+
+        // Limbs & Lightning Tail
+        [-1, 1].forEach((side) => {
+          const armGrp = side === -1 ? leftArm : rightArm;
+          armGrp.position.set(side * 0.52, 1.12, 0.32);
+          const arm = new THREE.Mesh(new THREE.CapsuleGeometry(0.14, 0.34, 8, 10), yellowMat);
+          arm.rotation.x = 0.4;
+          arm.rotation.z = side * 0.25;
+          armGrp.add(arm);
+
+          const legGrp = side === -1 ? leftLeg : rightLeg;
+          legGrp.position.set(side * 0.36, 0.42, 0.05);
+          const foot = new THREE.Mesh(new THREE.CapsuleGeometry(0.18, 0.38, 8, 10), yellowMat);
+          foot.rotation.x = Math.PI / 2;
+          foot.position.set(0, -0.18, 0.15);
+          legGrp.add(foot);
+        });
+
+        tailGroup.position.set(0, 0.55, -0.52);
+        const tailSegments = [
+          { size: [0.12, 0.35, 0.06], pos: [0, 0.15, -0.05], rot: 0.3, mat: brownMat },
+          { size: [0.18, 0.42, 0.06], pos: [0.08, 0.45, -0.1], rot: -0.4, mat: yellowMat },
+          { size: [0.26, 0.55, 0.07], pos: [0.0, 0.85, -0.15], rot: 0.2, mat: yellowMat },
+          { size: [0.44, 0.68, 0.08], pos: [0.12, 1.35, -0.22], rot: -0.15, mat: yellowMat }
+        ];
+        tailSegments.forEach((ts) => {
+          const m = new THREE.Mesh(new THREE.BoxGeometry(...ts.size), ts.mat);
+          m.position.set(...ts.pos);
+          m.rotation.z = ts.rot;
+          tailGroup.add(m);
+        });
+
+      } else if (species === 'charmander') {
+        const orangeMat = makeMat(0xff7722);
+        const creamMat = makeMat(0xfff0b3);
+
+        const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.58, 0.65, 12, 16), orangeMat);
+        torso.position.y = 0.88;
+        torsoGroup.add(torso);
+
+        const belly = new THREE.Mesh(new THREE.SphereGeometry(0.5, 14, 14), creamMat);
+        belly.position.set(0, 0.85, 0.25);
+        belly.scale.set(0.85, 1.05, 0.5);
+        torsoGroup.add(belly);
+
+        headGroup.position.set(0, 1.72, 0.1);
+        const skull = new THREE.Mesh(new THREE.SphereGeometry(0.68, 20, 18), orangeMat);
+        skull.scale.set(1.02, 0.98, 1.05);
+        headGroup.add(skull);
+
+        addAnimeEyes(headGroup, 0.1, 0.58, 0.35);
+
+        [-1, 1].forEach((side) => {
+          const armGrp = side === -1 ? leftArm : rightArm;
+          armGrp.position.set(side * 0.55, 1.1, 0.2);
+          const arm = new THREE.Mesh(new THREE.CapsuleGeometry(0.14, 0.35, 8, 10), orangeMat);
+          arm.rotation.x = 0.3;
+          armGrp.add(arm);
+
+          const legGrp = side === -1 ? leftLeg : rightLeg;
+          legGrp.position.set(side * 0.38, 0.42, 0.05);
+          const leg = new THREE.Mesh(new THREE.CapsuleGeometry(0.18, 0.36, 8, 10), orangeMat);
+          leg.position.y = -0.15;
+          legGrp.add(leg);
+        });
+
+        tailGroup.position.set(0, 0.55, -0.5);
+        const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.28, 0.9, 10), orangeMat);
+        tail.rotation.x = -1.1;
+        tail.position.set(0, 0.25, -0.4);
+        tailGroup.add(tail);
+
+        // Flame on tail tip
+        const flame = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.45, 8), new THREE.MeshBasicMaterial({ color: 0xff3300 }));
+        flame.position.set(0, 0.65, -0.8);
+        flame.rotation.x = -0.8;
+        tailGroup.add(flame);
+
+      } else if (species === 'squirtle') {
+        const blueMat = makeMat(0x60c5f1);
+        const shellMat = makeMat(0x8b4513);
+        const rimMat = makeMat(0xffffff);
+
+        const torso = new THREE.Mesh(new THREE.SphereGeometry(0.65, 16, 16), blueMat);
+        torso.position.y = 0.88;
+        torsoGroup.add(torso);
+
+        const shell = new THREE.Mesh(new THREE.SphereGeometry(0.66, 16, 16), shellMat);
+        shell.position.set(0, 0.88, -0.15);
+        shell.scale.set(0.95, 1.05, 0.8);
+        torsoGroup.add(shell);
+
+        const rim = new THREE.Mesh(new THREE.TorusGeometry(0.68, 0.08, 10, 24), rimMat);
+        rim.position.set(0, 0.88, -0.05);
+        torsoGroup.add(rim);
+
+        headGroup.position.set(0, 1.7, 0.1);
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.65, 20, 18), blueMat);
+        headGroup.add(head);
+
+        addAnimeEyes(headGroup, 0.1, 0.56, 0.36);
+
+        [-1, 1].forEach((side) => {
+          const armGrp = side === -1 ? leftArm : rightArm;
+          armGrp.position.set(side * 0.56, 1.05, 0.2);
+          const arm = new THREE.Mesh(new THREE.CapsuleGeometry(0.15, 0.32, 8, 10), blueMat);
+          armGrp.add(arm);
+
+          const legGrp = side === -1 ? leftLeg : rightLeg;
+          legGrp.position.set(side * 0.38, 0.4, 0.0);
+          const leg = new THREE.Mesh(new THREE.CapsuleGeometry(0.18, 0.34, 8, 10), blueMat);
+          leg.position.y = -0.15;
+          legGrp.add(leg);
+        });
+
+        tailGroup.position.set(0, 0.5, -0.55);
+        const tail = new THREE.Mesh(new THREE.SphereGeometry(0.32, 12, 12), blueMat);
+        tail.scale.set(0.7, 1.0, 1.3);
+        tailGroup.add(tail);
+
+      } else if (species === 'gengar') {
+        // ⭐ 完整大嘴、尖牙、背部棘刺、尖耳與紅眼的經典耿鬼！
+        const purpleMat = makeMat(0x6c4696, 0.3);
+        const teethMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        const mouthBgMat = new THREE.MeshBasicMaterial({ color: 0x2e0854 });
+
+        const body = new THREE.Mesh(new THREE.SphereGeometry(0.95, 26, 22), purpleMat);
+        body.position.set(0, 1.08, 0);
+        body.scale.set(1.15, 1.08, 1.02);
+        torsoGroup.add(body);
+
+        // 4 Spikes on back
+        for (let i = 0; i < 4; i++) {
+          const spike = new THREE.Mesh(new THREE.ConeGeometry(0.24, 0.55, 7), purpleMat);
+          spike.position.set(0, 1.82 - i * 0.32, -0.48 - i * 0.14);
+          spike.rotation.x = -0.75;
+          torsoGroup.add(spike);
+        }
+
+        headGroup.position.set(0, 1.15, 0.32);
+        addAnimeEyes(headGroup, 0.26, 0.55, 0.42, true);
+
+        // Iconic Huge Grin with detailed white serrated teeth
+        const mouthBase = new THREE.Mesh(new THREE.BoxGeometry(0.92, 0.32, 0.22), mouthBgMat);
+        mouthBase.position.set(0, -0.14, 0.58);
+        headGroup.add(mouthBase);
+
+        const teethRow = new THREE.Mesh(new THREE.BoxGeometry(0.88, 0.24, 0.23), teethMat);
+        teethRow.position.set(0, -0.14, 0.59);
+        headGroup.add(teethRow);
+
+        // Grid lines for sinister teeth
+        for (let t = -3; t <= 3; t++) {
+          const toothGap = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.24, 0.24), mouthBgMat);
+          toothGap.position.set(t * 0.12, -0.14, 0.595);
+          headGroup.add(toothGap);
+        }
+
+        // Two Big Pointy Ears
+        [-1, 1].forEach((side) => {
+          const ear = new THREE.Mesh(new THREE.ConeGeometry(0.34, 0.82, 8), purpleMat);
+          ear.position.set(side * 0.68, 0.82, -0.22);
+          ear.rotation.z = -side * 0.55;
+          headGroup.add(ear);
+        });
+
+        // Limbs & Tail
+        [-1, 1].forEach((side) => {
+          const armGrp = side === -1 ? leftArm : rightArm;
+          armGrp.position.set(side * 0.92, 1.05, 0.15);
+          const arm = new THREE.Mesh(new THREE.ConeGeometry(0.24, 0.6, 10), purpleMat);
+          arm.rotation.z = side * 1.15;
+          armGrp.add(arm);
+
+          const legGrp = side === -1 ? leftLeg : rightLeg;
+          legGrp.position.set(side * 0.48, 0.42, 0.0);
+          const leg = new THREE.Mesh(new THREE.CapsuleGeometry(0.25, 0.28, 8, 10), purpleMat);
+          leg.position.y = -0.15;
+          legGrp.add(leg);
+        });
+
+        tailGroup.position.set(0, 0.45, -0.78);
+        const tail = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.68, 8), purpleMat);
+        tail.rotation.x = -1.25;
+        tailGroup.add(tail);
+
+      } else {
+        // 🦊 伊布 (Eevee)
+        const brownMat = makeMat(0xc68642);
+        const creamMat = makeMat(0xfff3d1, 0.4);
+
+        const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.48, 0.68, 10, 14), brownMat);
+        torso.rotation.x = Math.PI / 2;
+        torso.position.set(0, 0.75, -0.05);
+        torsoGroup.add(torso);
+
+        // Fluffy Cream Mane
+        const mane = new THREE.Mesh(new THREE.DodecahedronGeometry(0.68, 1), creamMat);
+        mane.position.set(0, 0.95, 0.38);
+        torsoGroup.add(mane);
+
+        headGroup.position.set(0, 1.35, 0.52);
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.55, 18, 16), brownMat);
+        headGroup.add(head);
+
+        addAnimeEyes(headGroup, 0.08, 0.46, 0.28);
+
+        [-1, 1].forEach((side) => {
+          const ear = new THREE.Mesh(new THREE.ConeGeometry(0.24, 0.85, 8), brownMat);
+          ear.position.set(side * 0.45, 0.58, -0.05);
+          ear.rotation.z = -side * 0.65;
+          headGroup.add(ear);
+        });
+
+        // 4 Running Legs
+        [-1, 1].forEach((side) => {
+          const fLeg = side === -1 ? leftArm : rightArm;
+          fLeg.position.set(side * 0.32, 0.42, 0.28);
+          const fl = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.48, 8), brownMat);
+          fl.position.y = -0.22;
+          fLeg.add(fl);
+
+          const bLeg = side === -1 ? leftLeg : rightLeg;
+          bLeg.position.set(side * 0.34, 0.42, -0.35);
+          const bl = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.13, 0.48, 8), brownMat);
+          bl.position.y = -0.22;
+          bLeg.add(bl);
+        });
+
+        tailGroup.position.set(0, 0.65, -0.58);
+        const tail = new THREE.Mesh(new THREE.ConeGeometry(0.35, 0.95, 10), creamMat);
+        tail.rotation.x = -1.1;
+        tailGroup.add(tail);
+      }
+
+      // Traversal for realistic shadows
+      root.traverse((c) => {
+        if (c.isMesh) {
+          c.castShadow = true;
+          c.receiveShadow = true;
+        }
+      });
+
+      // ⭐ 1.3X 主體等比放大！ (Leader Scale = 1.3)
+      const LEADER_SCALE = 1.3;
+      root.scale.set(LEADER_SCALE, LEADER_SCALE, LEADER_SCALE);
+
+      return { root, headGroup, torsoGroup };
+    }
+
+    // --- ⭐ PETITE 1/3 HEAD HOOD & MINI SHOULDER CAPELET (三分之一頭・精緻短披肩) ---
+    function buildRedesignedCape(capeType, species) {
+      if (capeType === 'none') return null;
+
+      const capeRoot = new THREE.Group();
+      capeRoot.userData.isCape = true;
+
+      // Color Schemes
+      let primaryColor = 0x38bdf8; // Sulley sky blue
+      let accentColor = 0x9333ea;  // Purple spot
+
+      if (capeType === 'mike') {
+        primaryColor = 0x84cc16;   // Mike lime green
+        accentColor = 0x16a34a;
+      } else if (capeType === 'boo') {
+        primaryColor = 0xc084fc;   // Boo lavender
+        accentColor = 0xe879f9;
+      } else if (capeType === 'randall') {
+        primaryColor = 0x475569;   // Randall slate/violet
+        accentColor = 0xa855f7;
+      }
+
+      const clothMat = new THREE.MeshStandardMaterial({
+        color: primaryColor,
+        roughness: 0.6,
+        metalness: 0.05,
+        side: THREE.DoubleSide
+      });
+      const goldMat = new THREE.MeshStandardMaterial({
+        color: 0xffd700,
+        metalness: 0.85,
+        roughness: 0.2
+      });
+
+      // Character-specific Floating Hat Hover Anchors (Unscaled Pokémon space)
+      // 精準懸浮於頭頂上方約 0.15~0.25 單位，自然親切如魔幻王冠
+      let hatPosY = 2.48;
+      let hatPosZ = 0.08;
+
+      if (species === 'gengar') {
+        hatPosY = 2.42;
+        hatPosZ = -0.05;
+      } else if (species === 'falinks') { // Eevee (四足獸，頭部位於前方)
+        hatPosY = 2.05;
+        hatPosZ = 0.48;
+      } else if (species === 'charmander') {
+        hatPosY = 2.45;
+        hatPosZ = 0.06;
+      } else if (species === 'squirtle') {
+        hatPosY = 2.42;
+        hatPosZ = 0.05;
+      } else if (species === 'pikachu') {
+        hatPosY = 2.48;
+        hatPosZ = 0.08;
+      }
+
+      // ========================================================
+      // 🎩 頭頂懸空魔幻帽子 (FLOATING MAGIC HAT - 加大 1.2X 更加醒目突出)
+      // ========================================================
+      const hatGroup = new THREE.Group();
+      hatGroup.position.set(0, hatPosY + 0.05, hatPosZ);
+      hatGroup.rotation.x = 0.15; // 自然向前微傾，完美展示帽子正面特徵！
+      hatGroup.scale.set(1.2, 1.2, 1.2); // ⭐ 依需求再加大 1.2X 霸氣醒目！
+      hatGroup.userData.basePosY = hatPosY + 0.05;
+      hatGroup.userData.isFloatingHat = true;
+
+      // 1. 懸空魔法微光光環 (Floating Magic Energy Halo)
+      const haloMat = new THREE.MeshBasicMaterial({
+        color: accentColor,
+        transparent: true,
+        opacity: 0.85
+      });
+      const haloRing = new THREE.Mesh(new THREE.TorusGeometry(0.38, 0.022, 16, 36), haloMat);
+      haloRing.rotation.x = Math.PI / 2;
+      haloRing.position.y = -0.14;
+      hatGroup.add(haloRing);
+
+      // Orbiting magic sparkle gems under the hat
+      for (let i = 0; i < 4; i++) {
+        const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.045, 0), haloMat);
+        const a = (i / 4) * Math.PI * 2;
+        gem.position.set(Math.cos(a) * 0.38, -0.14, Math.sin(a) * 0.38);
+        hatGroup.add(gem);
+      }
+
+      // 2. 帽子本體造型 (Distinctive Monsters, Inc. Floating Hats)
+      if (capeType === 'sulley') {
+        // 【毛怪藍斑點角角貝雷帽】
+        const beretGeo = new THREE.SphereGeometry(0.38, 20, 16);
+        const beret = new THREE.Mesh(beretGeo, clothMat);
+        beret.scale.set(1.15, 0.55, 1.15);
+        beret.castShadow = true;
+        hatGroup.add(beret);
+
+        // Beret bottom rim band
+        const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.36, 0.08, 24), clothMat);
+        rim.position.y = -0.10;
+        hatGroup.add(rim);
+
+        // Iconic curved white horns
+        [-1, 1].forEach((side) => {
+          const horn = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.30, 10), makeMat(0xffffff, 0.2));
+          horn.position.set(side * 0.35, 0.14, 0);
+          horn.rotation.z = -side * 0.55;
+          horn.rotation.x = -0.12;
+          hatGroup.add(horn);
+        });
+
+        // Purple polka dots
+        const spotMat = makeMat(accentColor, 0.4);
+        [
+          [0.18, 0.12, 0.18],
+          [-0.20, 0.14, -0.12],
+          [0.05, 0.18, -0.20]
+        ].forEach(([x, y, z]) => {
+          const s = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 8), spotMat);
+          s.position.set(x, y, z);
+          hatGroup.add(s);
+        });
+
+        // Top stem
+        const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.1, 6), makeMat(accentColor));
+        stem.position.y = 0.24;
+        hatGroup.add(stem);
+
+      } else if (capeType === 'mike') {
+        // 【大眼仔怪獸電力公司工廠安全帽 + 招牌水汪汪大眼】
+        const hardhatMat = makeMat(0x84cc16, 0.25); // Lime green
+        const hardhatGeo = new THREE.SphereGeometry(0.38, 24, 18, 0, Math.PI * 2, 0, Math.PI * 0.5);
+        const hardhat = new THREE.Mesh(hardhatGeo, hardhatMat);
+        hardhat.scale.set(1.05, 0.75, 1.15);
+        hardhat.castShadow = true;
+        hatGroup.add(hardhat);
+
+        // Safety helmet brim
+        const brimGeo = new THREE.CylinderGeometry(0.44, 0.44, 0.04, 24);
+        const brim = new THREE.Mesh(brimGeo, hardhatMat);
+        brim.position.y = 0;
+        hatGroup.add(brim);
+
+        // Front visor extension
+        const visorGeo = new THREE.CylinderGeometry(0.45, 0.46, 0.04, 16, 1, false, -Math.PI * 0.28, Math.PI * 0.56);
+        const visor = new THREE.Mesh(visorGeo, hardhatMat);
+        visor.position.set(0, -0.02, 0.06);
+        hatGroup.add(visor);
+
+        // Top reinforcement ridge
+        const ridge = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.1, 0.65), makeMat(0x65a30d));
+        ridge.position.set(0, 0.25, 0);
+        hatGroup.add(ridge);
+
+        // Mike's ICONIC GIANT EYE right on front facing camera!
+        const eyeRig = new THREE.Group();
+        eyeRig.position.set(0, 0.15, 0.32);
+        eyeRig.rotation.x = 0.12;
+
+        const sclera = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 16), new THREE.MeshStandardMaterial({ color: 0xffffff }));
+        sclera.scale.set(1.0, 1.0, 0.65);
+        eyeRig.add(sclera);
+
+        const iris = new THREE.Mesh(new THREE.SphereGeometry(0.11, 14, 14), new THREE.MeshStandardMaterial({ color: 0x16a34a }));
+        iris.position.set(0, 0, 0.10);
+        sclera.add(iris);
+
+        const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.055, 10, 10), new THREE.MeshBasicMaterial({ color: 0x090d16 }));
+        pupil.position.set(0, 0, 0.06);
+        iris.add(pupil);
+
+        const shine = new THREE.Mesh(new THREE.SphereGeometry(0.028, 8, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+        shine.position.set(0.025, 0.025, 0.05);
+        pupil.add(shine);
+
+        hatGroup.add(eyeRig);
+
+        // Two small cute gray horn nubs
+        [-1, 1].forEach((side) => {
+          const horn = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.16, 8), makeMat(0x334155));
+          horn.position.set(side * 0.28, 0.24, -0.05);
+          horn.rotation.z = -side * 0.35;
+          hatGroup.add(horn);
+        });
+
+      } else if (capeType === 'boo') {
+        // 【阿布紫色怪獸偽裝雙彈簧眼帽】
+        const booMat = makeMat(0xa855f7, 0.45);
+        const cap = new THREE.Mesh(new THREE.SphereGeometry(0.38, 20, 16), booMat);
+        cap.scale.set(1.08, 0.72, 1.08);
+        cap.castShadow = true;
+        hatGroup.add(cap);
+
+        // White monster teeth fringe under brim
+        for (let i = 0; i < 7; i++) {
+          const tooth = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.09, 4), makeMat(0xffffff, 0.2));
+          const ang = -0.9 + i * 0.3;
+          tooth.position.set(Math.sin(ang) * 0.36, -0.12, Math.cos(ang) * 0.36);
+          tooth.rotation.x = Math.PI;
+          tooth.rotation.y = ang;
+          hatGroup.add(tooth);
+        }
+
+        // Two lively bouncing spring googly eyes (緊湊精緻高度)
+        [-1, 1].forEach((side) => {
+          const ant = new THREE.Group();
+          ant.position.set(side * 0.18, 0.22, 0.05);
+
+          const spring = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.20, 6), goldMat);
+          spring.position.y = 0.10;
+          ant.add(spring);
+
+          const googly = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 12), new THREE.MeshStandardMaterial({ color: 0xffffff }));
+          googly.position.set(side * 0.03, 0.24, 0);
+          const p = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), new THREE.MeshBasicMaterial({ color: 0x111827 }));
+          p.position.set(0, 0, 0.1);
+          googly.add(p);
+          ant.add(googly);
+
+          hatGroup.add(ant);
+        });
+
+      } else if (capeType === 'randall') {
+        // 【藍道變色龍高科技隱形戰冠】
+        const randMat = makeMat(0x4338ca, 0.2); // Indigo metallic
+        const crown = new THREE.Mesh(new THREE.CylinderGeometry(0.40, 0.34, 0.16, 24), randMat);
+        crown.castShadow = true;
+        hatGroup.add(crown);
+
+        // Glowing neon visor line
+        const visorLine = new THREE.Mesh(new THREE.TorusGeometry(0.38, 0.03, 8, 24, Math.PI * 0.8), new THREE.MeshBasicMaterial({ color: 0x06b6d4 }));
+        visorLine.rotation.y = -Math.PI * 0.4;
+        visorLine.position.y = -0.02;
+        hatGroup.add(visorLine);
+
+        // 3 Chameleon dorsal fins on top
+        for (let i = 0; i < 3; i++) {
+          const fin = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.16 - i * 0.02, 0.22), makeMat(accentColor, 0.2));
+          fin.position.set(0, 0.16 - i * 0.04, -0.06 - i * 0.12);
+          fin.rotation.x = -0.35;
+          hatGroup.add(fin);
+        }
+      }
+
+      capeRoot.add(hatGroup);
+
+      // Match leader scale (1.3X * 1.2X = 1.56X 再加大 1.2X 霸氣加倍)
+      const LEADER_SCALE = currentLeaderScale;
+      capeRoot.scale.set(LEADER_SCALE, LEADER_SCALE, LEADER_SCALE);
+
+      return capeRoot;
+    }
+
+    // --- State & Scene Management ---
+    let currentPokemon = 'pikachu';
+    let currentCape = 'sulley';
+    let currentLeaderScale = 1.3 * 1.2; // 1.56X (已再加大 1.2X)
+    let currentCharacterGroup = null;
+    let autoRotate = false;
+
+    function refreshModel() {
+      if (currentCharacterGroup) {
+        scene.remove(currentCharacterGroup);
+      }
+
+      currentCharacterGroup = new THREE.Group();
+
+      // 1. Exact Pokémon Mesh (等比放大 1.56X)
+      const { root } = buildRealPokemon(currentPokemon);
+      root.scale.set(currentLeaderScale, currentLeaderScale, currentLeaderScale);
+      currentCharacterGroup.add(root);
+
+      // 2. Monsters Inc Floating Hat (等比放大 1.56X)
+      const cape = buildRedesignedCape(currentCape, currentPokemon);
+      if (cape) {
+        currentCharacterGroup.add(cape);
+      }
+
+      scene.add(currentCharacterGroup);
+
+      // Update descriptions
+      const detail = CAPE_DETAILS[currentCape];
+      document.getElementById('info-desc').innerText = detail.desc;
+      document.getElementById('info-buff').innerText = detail.buff;
+    }
+
+    // Interactive Drag Orbit & Zoom
+    let isDragging = false;
+    let prevMouseX = 0;
+    let prevMouseY = 0;
+    let yaw = 0.55; // 3/4 經典立體視角，正面臉龐與懸浮帽子一覽無遺
+    let pitch = 0.22;
+    let camDistance = 6.6; // 完美收納 1.3X 角色 + 頂部懸空帽子與晃動彈簧眼
+
+    function updateCameraPos() {
+      pitch = Math.max(-0.25, Math.min(1.15, pitch));
+      camDistance = Math.max(2.5, Math.min(8.5, camDistance));
+
+      const cx = targetLookAt.x + camDistance * Math.cos(pitch) * Math.sin(yaw);
+      const cy = targetLookAt.y + camDistance * Math.sin(pitch);
+      const cz = targetLookAt.z + camDistance * Math.cos(pitch) * Math.cos(yaw);
+
+      camera.position.set(cx, cy, cz);
+      camera.lookAt(targetLookAt);
+    }
+
+    window.setCameraOrbit = function(newYaw, newPitch, newDist) {
+      if (newYaw !== undefined) yaw = newYaw;
+      if (newPitch !== undefined) pitch = newPitch;
+      if (newDist !== undefined) camDistance = newDist;
+      updateCameraPos();
+    };
+
+    updateCameraPos();
+
+    window.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('.bottom-dock, .top-header, .view-controls')) return;
+      isDragging = true;
+      prevMouseX = e.clientX;
+      prevMouseY = e.clientY;
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      if (!isDragging) return;
+      const dx = e.clientX - prevMouseX;
+      const dy = e.clientY - prevMouseY;
+      prevMouseX = e.clientX;
+      prevMouseY = e.clientY;
+
+      yaw -= dx * 0.009;
+      pitch += dy * 0.007;
+      updateCameraPos();
+    });
+
+    window.addEventListener('pointerup', () => isDragging = false);
+
+    window.addEventListener('wheel', (e) => {
+      camDistance += e.deltaY * 0.003;
+      updateCameraPos();
+    }, { passive: true });
+
+    // UI Buttons Binding
+    document.getElementById('btn-reset-cam').addEventListener('click', () => {
+      yaw = 0;
+      pitch = 0.2;
+      camDistance = 4.4;
+      updateCameraPos();
+    });
+
+    document.getElementById('btn-toggle-spin').addEventListener('click', (e) => {
+      autoRotate = !autoRotate;
+      e.currentTarget.style.borderColor = autoRotate ? '#38bdf8' : 'rgba(255,255,255,0.15)';
+    });
+
+    // Pokemon selection
+    const pokeBtns = document.querySelectorAll('#poke-btn-row .selector-btn');
+    pokeBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        pokeBtns.forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentPokemon = btn.getAttribute('data-pokemon');
+        refreshModel();
+      });
+    });
+
+    // Scale selection
+    const btnScale156 = document.getElementById('btn-scale-156');
+    const btnScale130 = document.getElementById('btn-scale-130');
+    if (btnScale156 && btnScale130) {
+      btnScale156.addEventListener('click', () => {
+        btnScale156.classList.add('active');
+        btnScale130.classList.remove('active');
+        currentLeaderScale = 1.3 * 1.2;
+        refreshModel();
+      });
+      btnScale130.addEventListener('click', () => {
+        btnScale130.classList.add('active');
+        btnScale156.classList.remove('active');
+        currentLeaderScale = 1.3;
+        refreshModel();
+      });
+    }
+
+    // Cape selection
+    const capeBtns = document.querySelectorAll('#cape-btn-row .selector-btn');
+    capeBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        capeBtns.forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentCape = btn.getAttribute('data-cape');
+        refreshModel();
+      });
+    });
+
+    // Window resize
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Render loop with subtle idle bobbing animation!
+    let clock = new THREE.Clock();
+    function animate() {
+      requestAnimationFrame(animate);
+      const delta = clock.getDelta();
+      const time = clock.getElapsedTime();
+
+      if (autoRotate && !isDragging) {
+        yaw += delta * 0.45;
+        updateCameraPos();
+      }
+
+      // Idle breathing bob & Floating Hat magical hover
+      if (currentCharacterGroup) {
+        const bob = Math.sin(time * 2.5) * 0.04;
+        currentCharacterGroup.position.y = bob;
+
+        currentCharacterGroup.traverse((child) => {
+          if (child.userData && child.userData.isFloatingHat) {
+            child.position.y = child.userData.basePosY + Math.sin(time * 3.2) * 0.08;
+            child.rotation.y = Math.sin(time * 1.6) * 0.12;
+          }
+        });
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    // Initial build
+    refreshModel();
+    animate();
+  </script>
+</body>
+</html>
