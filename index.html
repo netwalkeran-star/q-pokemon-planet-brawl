@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <title>寶可夢星際萌蛇 3D：台北・京都・上海繪本城市小行星</title>
+    <link rel="stylesheet" href="./src/style.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "canvas-confetti": "https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/+esm"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="game-container"></div>
+
+    <!-- 3-Zone Game HUD: Left (Player/City) | Center (Match Scoreboard) | Right (Quick Controls) -->
+    <div id="hud-top">
+      <div class="hud-zone hud-zone-left">
+        <div class="hud-item stage-item">
+          <span id="stage-title">🏙️ 台北</span>
+        </div>
+        <div class="hud-item player-item" id="hud-player-badge" title="點擊檢視天賦樹">
+          <span>👑</span><span id="hud-player-name">訓練家</span>
+        </div>
+      </div>
+
+      <div class="hud-zone hud-zone-center">
+        <div class="hud-scoreboard">
+          <div class="sb-metric sb-timer" title="剩餘時間">
+            <span class="sb-icon">⏱️</span>
+            <b id="stage-timer">04:00</b>
+          </div>
+          <div class="sb-divider"></div>
+          <div class="sb-metric sb-length" title="隊伍目標進度">
+            <span id="hud-poke-icon" class="sb-icon">⚡</span>
+            <div class="sb-progress-wrap">
+              <div class="sb-progress-text">
+                <b id="snake-length">3</b><span class="sb-slash">/</span><b id="target-length">25</b>
+              </div>
+              <div class="sb-progress-bar">
+                <div id="hud-length-fill" class="sb-progress-fill" style="width: 12%;"></div>
+              </div>
+            </div>
+          </div>
+          <div class="sb-divider"></div>
+          <div class="sb-metric sb-flags" title="景點錦旗進度">
+            <span class="sb-icon">🚩</span>
+            <b id="flag-count">0</b><span class="sb-slash">/</span><b id="flag-total">13</b>
+          </div>
+          <div class="sb-divider"></div>
+          <div class="sb-metric sb-score" title="目前分數">
+            <span class="sb-icon">⭐</span>
+            <b id="game-score">0</b>
+          </div>
+        </div>
+      </div>
+
+      <div class="hud-zone hud-zone-right">
+        <div class="hud-item ai-mic-item" id="hud-ai-mic-btn" title="點擊切換 🤖 真AI 麥克風 (免按鍵直接講話)">
+          <span class="ai-mic-dot" id="hud-ai-mic-dot"></span>
+          <span>🎙️</span><span id="hud-ai-mic-text">AI</span>
+        </div>
+        <div class="hud-item sound-item" id="hud-sound-btn" title="切換音效靜音">
+          <span id="hud-sound-icon">🔊</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right-Side Small Circular % Ring Buff Indicators ("寶石效能可以重疊 5次 放在右邊 小小的 用圓的%還顯示") -->
+    <div id="buff-sidebar">
+      <!-- ⚡ Speed Buff (up to 5x = 2.0x speed) -->
+      <div class="buff-ring-item" id="buff-ring-speed" title="⚡ 加速寶石 (最高5層 = 2x速度)">
+        <svg class="buff-svg" viewBox="0 0 44 44">
+          <circle class="buff-track" cx="22" cy="22" r="18"></circle>
+          <circle class="buff-progress" id="buff-prog-speed" cx="22" cy="22" r="18" style="stroke: #ffd60a;"></circle>
+        </svg>
+        <div class="buff-center">
+          <span class="buff-emoji">⚡</span>
+          <span class="buff-pct" id="buff-pct-speed">0%</span>
+        </div>
+      </div>
+
+      <!-- 🛡️ Defense Buff (up to 5x = 80% block) -->
+      <div class="buff-ring-item" id="buff-ring-defense" title="🛡️ 防禦護盾 (最高5層 = 80%防咬)">
+        <svg class="buff-svg" viewBox="0 0 44 44">
+          <circle class="buff-track" cx="22" cy="22" r="18"></circle>
+          <circle class="buff-progress" id="buff-prog-defense" cx="22" cy="22" r="18" style="stroke: #00bbf9;"></circle>
+        </svg>
+        <div class="buff-center">
+          <span class="buff-emoji">🛡️</span>
+          <span class="buff-pct" id="buff-pct-defense">0%</span>
+        </div>
+      </div>
+
+      <!-- ✖️ Multiplier Buff (up to 5x = 100% 2-seg chance) -->
+      <div class="buff-ring-item" id="buff-ring-multiplier" title="✖️ 倍數成長 (最高5層 = 100%雙倍節數)">
+        <svg class="buff-svg" viewBox="0 0 44 44">
+          <circle class="buff-track" cx="22" cy="22" r="18"></circle>
+          <circle class="buff-progress" id="buff-prog-multiplier" cx="22" cy="22" r="18" style="stroke: #ff4d6d;"></circle>
+        </svg>
+        <div class="buff-center">
+          <span class="buff-emoji">✖️</span>
+          <span class="buff-pct" id="buff-pct-multiplier">0%</span>
+        </div>
+      </div>
+
+      <!-- 👻 Stealth Buff (Non-stacking, 30s) -->
+      <div class="buff-ring-item" id="buff-ring-stealth" title="👻 隱身寶石 (不累計，一次30秒)">
+        <svg class="buff-svg" viewBox="0 0 44 44">
+          <circle class="buff-track" cx="22" cy="22" r="18"></circle>
+          <circle class="buff-progress" id="buff-prog-stealth" cx="22" cy="22" r="18" style="stroke: #c77dff;"></circle>
+        </svg>
+        <div class="buff-center">
+          <span class="buff-emoji">👻</span>
+          <span class="buff-pct" id="buff-pct-stealth">0s</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1.5s Large Pure Text Landmark Crossing Effect ("穿越建築時會有大的字特效1.5秒 只有字喔") -->
+    <div id="landmark-fx-text" class="landmark-fx-hidden">🚩 台北 101</div>
+
+    <!-- Floating Toast (Moved to Top-Right as requested!) -->
+    <div id="game-toast" class="toast-hidden">獲得加速寶石！移動速度提升 ⚡</div>
+
+    <!-- Portrait Warning Banner when in Mobile Mode on a vertical screen -->
+    <div id="landscape-tip" class="hidden">
+      <span>🔄 請將手機橫放以獲得最佳體驗</span>
+      <button id="btn-fullscreen-landscape" class="btn-mini-Action">全螢幕橫屏</button>
+    </div>
+
+    <!-- Boss Health Bar -->
+    <div id="boss-hud" class="hidden">
+      <div class="boss-header">
+        <span id="boss-name">👾 台北守護神・超極巨大岩怪</span>
+        <span class="boss-weakness" id="boss-weakness">弱點: ⚡ 雷霆屬性 (2.5x 傷害)</span>
+      </div>
+      <div class="boss-hp-track">
+        <div id="boss-hp-fill"></div>
+      </div>
+    </div>
+
+    <!-- In-Game 3D Character Selection Overlay ("進遊戲後再選角色") -->
+    <div id="char-select-overlay" class="hidden">
+      <div class="char-select-panel">
+        <div class="char-select-header">
+          <h2>✨ 請選擇你的寶可夢隊長（即時 3D 預覽）</h2>
+          <p>小行星上會掉落「🎁 技能包」，吃到可施展 5 次專屬大招！</p>
+        </div>
+        <div class="poke-select-grid" id="poke-select-grid">
+          <div class="poke-card selected" data-species="pikachu">
+            <div class="poke-emoji">⚡</div>
+            <div class="poke-title">皮卡丘</div>
+            <div class="poke-skill-tag">⚡ 十萬伏特雷暴</div>
+          </div>
+          <div class="poke-card" data-species="charmander">
+            <div class="poke-emoji">🔥</div>
+            <div class="poke-title">小火龍</div>
+            <div class="poke-skill-tag">🔥 大字爆炎噴火</div>
+          </div>
+          <div class="poke-card" data-species="squirtle">
+            <div class="poke-emoji">💧</div>
+            <div class="poke-title">傑尼龜</div>
+            <div class="poke-skill-tag">💧 強力水炮衝浪</div>
+          </div>
+          <div class="poke-card" data-species="bulbasaur">
+            <div class="poke-emoji">🌱</div>
+            <div class="poke-title">妙蛙種子</div>
+            <div class="poke-skill-tag">🌱 飛葉快刀風暴</div>
+          </div>
+          <div class="poke-card" data-species="gengar">
+            <div class="poke-emoji">👻</div>
+            <div class="poke-title">耿鬼</div>
+            <div class="poke-skill-tag">👻 暗影球百鬼夜行</div>
+          </div>
+          <div class="poke-card" data-species="falinks">
+            <div class="poke-emoji">🦊</div>
+            <div class="poke-title">伊布</div>
+            <div class="poke-skill-tag">🦊 高速星星雨</div>
+          </div>
+        </div>
+        <!-- Moved BELOW the character grid for natural Eye-tracking flow! -->
+        <button id="btn-confirm-char" class="btn-primary btn-start-hero" style="margin-top: 14px; margin-bottom: 4px;">
+          ✅ 選定夥伴・正式開戰！
+        </button>
+      </div>
+    </div>
+
+    <!-- 💻 PC Mode Bottom-Right Compact Keybind Dock -->
+    <div id="hud-bottom" class="pc-keybind-dock">
+      <div class="pc-move-hint">WASD / 方向鍵移動・點擊地面導航</div>
+      <div class="touch-controls pc-action-row">
+        <button id="btn-dash" class="btn-ctrl btn-dash-active" title="極速衝刺（冷卻 3.2 秒）">
+          <svg class="action-svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M13 2L4.5 13.5h6L9.5 22l9.5-12h-6L13 2z"/>
+          </svg>
+          <span class="btn-label">衝刺</span>
+          <kbd class="keycap">Shift</kbd>
+          <span id="pc-dash-cd" class="pc-cd-badge hidden">3s</span>
+        </button>
+        <button id="btn-skill" class="btn-ctrl btn-skill-active" title="消耗 1 次技能包施展專屬大招">
+          <svg class="action-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M14.5 4.5L19.5 9.5M4 20l5-1 10-10-4-4L5 15l-1 5z"/>
+            <path d="M12 2v3M22 12h-3M19 5l-1.5 1.5"/>
+          </svg>
+          <span id="skill-text" class="btn-label">大招</span>
+          <kbd class="keycap">E</kbd>
+          <span id="skill-charges-pill" class="skill-charges-pill">0</span>
+        </button>
+        <button id="btn-jump" class="btn-ctrl btn-jump-active" title="騰空跳躍 / 跳殺咬尾">
+          <svg class="action-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 19V5"/>
+            <path d="M5 12l7-7 7 7"/>
+            <path d="M6 21h12"/>
+          </svg>
+          <span class="btn-label">跳殺</span>
+          <kbd class="keycap">Space</kbd>
+        </button>
+      </div>
+    </div>
+
+    <!-- 📱 Mobile Landscape Mode Controls -->
+    <div id="mobile-controls" class="hidden">
+      <div id="joystick-zone">
+        <div id="joystick-base">
+          <div class="joy-arrow joy-up">▲</div>
+          <div class="joy-arrow joy-down">▼</div>
+          <div class="joy-arrow joy-left">◀</div>
+          <div class="joy-arrow joy-right">▶</div>
+          <div id="joystick-stick">
+            <span>🐾</span>
+          </div>
+        </div>
+        <div class="joystick-label">推搖桿前進・左右轉向</div>
+      </div>
+
+      <div class="mobile-center-tip">
+        👆 單指滑動畫面旋轉星球・點擊地面自動走・雙指縮放
+      </div>
+
+      <div id="mobile-action-pad">
+        <button id="btn-mob-cam" class="mob-btn mob-btn-cam" title="視角回正 / 切換遠近">
+          <svg class="mob-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M23 7l-7 5 7 5V7z"/>
+            <rect x="1" y="5" width="15" height="14" rx="2.5"/>
+          </svg>
+          <span class="mob-text">視角</span>
+        </button>
+        <button id="btn-mob-dash" class="mob-btn mob-btn-dash" title="極速衝刺（CD 3.2秒）">
+          <svg class="mob-svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M13 2L4.5 13.5h6L9.5 22l9.5-12h-6L13 2z"/>
+          </svg>
+          <span class="mob-text">衝刺</span>
+          <span id="mob-dash-cd" class="mob-cd-overlay hidden">3</span>
+        </button>
+        <button id="btn-mob-attack" class="mob-btn mob-btn-attack" title="專屬大招攻擊（消耗技能包）">
+          <svg class="mob-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M14.5 4.5L19.5 9.5M4 20l5-1 10-10-4-4L5 15l-1 5z"/>
+            <path d="M12 2v3M22 12h-3"/>
+          </svg>
+          <span class="mob-text">大招</span>
+          <span id="mob-skill-charges" class="mob-charges-pill">0</span>
+        </button>
+        <button id="btn-mob-jump" class="mob-btn mob-btn-jump" title="跳殺咬尾">
+          <svg class="mob-svg mob-svg-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 19V5"/>
+            <path d="M5 12l7-7 7 7"/>
+            <path d="M6 21h12"/>
+          </svg>
+          <span class="mob-text">跳殺</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 1: Start Modal (Streamlined & Game-Ready) -->
+    <div id="start-modal" class="modal-overlay">
+      <div class="modal-card modal-compact start-modal-card">
+        <h1 class="start-hero-title">⚡ 寶可夢城市小行星・爭霸賽 🏙️</h1>
+
+        <!-- Player Profile Banner -->
+        <div class="player-profile-bar">
+          <div class="profile-left">
+            <span class="profile-avatar">👑</span>
+            <div class="profile-texts">
+              <div class="profile-name-row">
+                <span id="start-player-name" class="profile-name">小智</span>
+                <span id="start-player-level" class="badge-level">Lv.1</span>
+                <button id="btn-edit-name" class="btn-text-edit" title="修改名稱">✏️ 改名</button>
+              </div>
+              <div class="profile-exp-wrap">
+                <div class="profile-exp-bar">
+                  <div id="start-player-exp-fill" class="profile-exp-fill" style="width: 3%;"></div>
+                </div>
+                <span id="start-player-exp" class="exp-text">0/30</span>
+              </div>
+            </div>
+          </div>
+          <div class="profile-actions">
+            <button id="btn-open-talents" class="btn-profile-action btn-talent-glow">
+              <span class="pa-icon">🌳</span>
+              <span>天賦</span>
+              <b id="badge-talent-points" class="badge-dot">0</b>
+            </button>
+            <button id="btn-open-settings" class="btn-profile-action" title="遊戲設定（音效・AI語音・存檔）">
+              <span class="pa-icon">⚙️</span>
+              <span>設定</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Primary Start Button -->
+        <button id="btn-start" class="btn-primary btn-start-hero">
+          🚀 開始冒險
+        </button>
+
+        <!-- Control Mode Selector in Start Modal -->
+        <div class="start-mode-selector">
+          <button class="mode-choice-btn active" data-mode="pc" id="start-mode-pc">
+            💻 電腦鍵鼠模式
+          </button>
+          <button class="mode-choice-btn" data-mode="mobile" id="start-mode-mobile">
+            📱 手機橫屏搖桿
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Compact Settings Modal (Consolidates Sound, AI Voice, Save Import/Export) -->
+    <div id="settings-modal" class="modal-overlay hidden">
+      <div class="modal-card modal-compact settings-modal-card" style="max-width: 380px;">
+        <h2 style="margin-bottom: 12px;">⚙️ 遊戲設定</h2>
+        <div class="settings-list">
+          <button id="btn-toggle-sound" class="settings-item-btn">
+            <span id="start-sound-icon">🔊 音效：開啟</span>
+            <span class="settings-arrow">切換</span>
+          </button>
+          <button id="btn-open-ai-settings" class="settings-item-btn">
+            <span>🤖 真 AI 語音設定</span>
+            <span class="settings-arrow">開啟 ▸</span>
+          </button>
+          <button id="btn-open-save-io" class="settings-item-btn">
+            <span>💾 存檔匯出 / 匯入</span>
+            <span class="settings-arrow">開啟 ▸</span>
+          </button>
+        </div>
+        <button id="btn-close-settings" class="btn-secondary-end" style="margin-top: 14px; width: 100%;">
+          完成
+        </button>
+      </div>
+    </div>
+
+    <!-- Victory Modal (Fixed Single-Screen Layout, No Scrolling Needed!) -->
+    <div id="victory-modal" class="modal-overlay hidden">
+      <div class="modal-card modal-compact">
+        <h1 id="victory-title">🎉 恭喜率先達標獲勝！</h1>
+        <p id="victory-desc" class="subtitle">成功稱霸台北小行星，準備前往下一座城市！</p>
+        <div class="stats-summary">
+          <div>本次獲得分數：<b id="final-score" style="color:#ffd166;">0</b></div>
+          <div>寶可夢隊伍長度：<b id="final-length" style="color:#4ade80;">25 / 25</b></div>
+        </div>
+        <div class="end-leaderboard-box">
+          <div class="lb-header">🏆 本關最終隊伍排行榜</div>
+          <div id="victory-leaderboard-list" class="end-lb-grid"></div>
+        </div>
+        <button id="btn-next-stage" class="btn-primary">✈️ 晉級下一座城市小行星</button>
+      </div>
+    </div>
+
+    <!-- All 3 Cities Cleared Modal ("三個城市都過了 跳出完成都市探險 繼續(三個城市跳出來選) 還是結束") -->
+    <div id="grand-complete-modal" class="modal-overlay hidden">
+      <div class="modal-card modal-compact">
+        <h1 style="color:#fde047;">🎊 恭喜完成三大都市探險！</h1>
+        <p class="subtitle">你已成功征服【台北・京都・上海】三座城市小行星！要繼續選擇城市挑戰，還是結束探險？</p>
+        <div class="stats-summary">
+          <div>總累計分數：<b id="grand-final-score" style="color:#ffd166;">0</b></div>
+          <div>本關隊伍長度：<b id="grand-final-length" style="color:#4ade80;">25</b></div>
+        </div>
+        <div class="end-leaderboard-box">
+          <div class="lb-header">🏆 本關最終隊伍排行榜</div>
+          <div id="grand-leaderboard-list" class="end-lb-grid"></div>
+        </div>
+        <div class="city-pick-title">✈️ 繼續探險（直接點選想玩的城市）：</div>
+        <div class="city-pick-grid">
+          <button class="btn-city-pick" data-stage="1">🏙️ 台北小行星</button>
+          <button class="btn-city-pick" data-stage="2">⛩️ 京都小行星</button>
+          <button class="btn-city-pick" data-stage="3">🥮 上海小行星</button>
+        </div>
+        <button id="btn-end-adventure" class="btn-secondary-end">🏁 結束都市探險（返回首頁）</button>
+      </div>
+    </div>
+
+    <!-- Game Over / NPC Won Race Modal (Fixed Single-Screen Layout!) -->
+    <div id="gameover-modal" class="modal-overlay hidden">
+      <div class="modal-card modal-compact">
+        <h1 id="gameover-title">😮 NPC 搶先達到目標數量了！</h1>
+        <p id="gameover-desc" class="subtitle">善用「✖️倍數寶石」、「🛡️防禦寶石」與「🦘跳躍咬身體」重新挑戰本關吧！</p>
+        <div class="end-leaderboard-box">
+          <div class="lb-header">🏁 本關結束時隊伍排行榜</div>
+          <div id="gameover-leaderboard-list" class="end-lb-grid"></div>
+        </div>
+        <button id="btn-restart" class="btn-primary">🔄 重新挑戰本關</button>
+      </div>
+    </div>
+
+    <!-- Modal: First-Time Player Name Prompt ("第一次進去可寫人名") -->
+    <div id="name-modal" class="modal-overlay hidden">
+      <div class="modal-card modal-compact name-modal-card">
+        <div class="name-modal-header">
+          <span class="name-badge-icon">🪪</span>
+          <h2>歡迎來到寶可夢城市小行星！</h2>
+          <p class="subtitle">請輸入你的訓練家稱號，為你的小隊命名：</p>
+        </div>
+        <div class="name-input-box">
+          <input type="text" id="input-player-name" maxlength="12" placeholder="請輸入名字 (例: 小智 / Kenji)" />
+        </div>
+        <div class="name-quick-tags">
+          <button class="btn-name-tag" data-name="小智">⚡ 小智</button>
+          <button class="btn-name-tag" data-name="小霞">💧 小霞</button>
+          <button class="btn-name-tag" data-name="Kenji">🌟 Kenji</button>
+          <button class="btn-name-tag" data-name="皮卡隊長">🐾 皮卡隊長</button>
+        </div>
+        <button id="btn-save-name" class="btn-primary" style="width: 100%; margin-top: 10px;">
+          ✅ 確認稱號・展開冒險！
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal: Passive Talent Tree ("被動天賦樹") -->
+    <div id="talent-modal" class="modal-overlay hidden">
+      <div class="modal-card talent-modal-card">
+        <div class="talent-modal-header">
+          <h2>🌳 訓練家被動天賦樹</h2>
+          <p class="subtitle">在關卡中累積節數提升等級，獲得點數自由分配強化！</p>
+          <div class="talent-stats-bar">
+            <div>訓練家等級: <b id="talent-ui-level" style="color:#fde047;">Lv.1</b></div>
+            <div>累積節數: <b id="talent-ui-exp" style="color:#38bdf8;">0 / 30 節</b></div>
+            <div>可用天賦點: <b id="talent-ui-points" style="color:#4ade80; font-size:17px;">0</b></div>
+            <button id="btn-reset-talents" class="btn-text-edit" style="color:#f87171;">🔄 免費洗點</button>
+          </div>
+        </div>
+
+        <div class="talent-grid" id="talent-grid">
+          <!-- Dynamically populated from TALENT_DEFINITIONS -->
+        </div>
+
+        <button id="btn-close-talents" class="btn-primary" style="margin-top: 12px; width: 100%;">
+          👌 完成天賦配置
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal: Save Import / Export ("可以匯出匯入進度") -->
+    <div id="save-io-modal" class="modal-overlay hidden">
+      <div class="modal-card modal-compact">
+        <h2>💾 遊戲進度匯出與匯入</h2>
+        <p class="subtitle">更換手機或不同瀏覽器時，可透過進度代碼備份與還原！</p>
+
+        <div class="io-section">
+          <label>📤 匯出你的進度代碼：</label>
+          <div class="io-row">
+            <input type="text" id="export-code-input" readonly placeholder="點擊產生代碼..." />
+            <button id="btn-copy-export" class="btn-ctrl" style="padding: 6px 12px;">複製代碼</button>
+          </div>
+        </div>
+
+        <div class="io-section" style="margin-top: 12px;">
+          <label>📥 匯入其他裝置的進度代碼：</label>
+          <div class="io-row">
+            <input type="text" id="import-code-input" placeholder="在此貼上 PKM_ 開頭的進度代碼..." />
+            <button id="btn-exec-import" class="btn-ctrl" style="background:#16a34a; padding: 6px 12px;">還原進度</button>
+          </div>
+        </div>
+
+        <button id="btn-close-save-io" class="btn-secondary-end" style="margin-top: 14px; width: 100%;">
+          關閉
+        </button>
+      </div>
+    </div>
+
+    <!-- AI Settings & Voice Guidance Modal ("有一隻是真AI 我只要講話就可以對話 不用按特定鍵") -->
+    <div id="ai-settings-modal" class="modal-overlay hidden">
+      <div class="modal-card modal-compact name-modal-card" style="max-width: 480px;">
+        <h2 style="color: #38bdf8; margin-bottom: 6px;">🤖 真 AI 勁敵耿鬼・語音對話</h2>
+        <p class="subtitle" style="margin-bottom: 12px; font-size: 13px;">
+          🎙️ <b>全時免按鍵語音：</b> 玩遊戲時<b>直接開口說話</b>，場上的「🤖 AI 耿鬼」就會即時聽到、開口回話，並根據你的話逃跑、追咬或嘲諷！
+        </p>
+
+        <div class="io-section" style="margin-top: 8px;">
+          <label style="color: #fde047; font-weight: 700;">🔑 Google Gemini API Key (選填)：</label>
+          <div style="font-size: 11px; color: #94a3b8; margin-bottom: 6px;">
+            留空即可使用內建賽跑語音大腦；若填入 API Key，將解鎖無限發揮的真 AI 即時對答！
+          </div>
+          <input type="password" id="input-gemini-key" placeholder="AIzaSy... (若無可留空直接玩)" style="width: 100%; box-sizing: border-box;" />
+        </div>
+
+        <div style="margin-top: 12px; display: flex; gap: 8px;">
+          <button id="btn-save-ai-settings" class="btn-primary" style="flex: 1;">
+            💾 儲存並開啟麥克風
+          </button>
+          <button id="btn-close-ai-settings" class="btn-secondary-end" style="flex: 1;">
+            關閉
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
