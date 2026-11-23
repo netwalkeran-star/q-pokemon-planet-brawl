@@ -444,6 +444,28 @@ class BrawlApp {
       startModal.classList.toggle('hidden', !this.state.paused);
     });
 
+    const guideModal = document.getElementById('guide-modal');
+    let pausedByGuide = false;
+    const openGuide = () => {
+      if (this.state.running && !this.state.paused) {
+        this.state.paused = true;
+        pausedByGuide = true;
+      } else {
+        pausedByGuide = false;
+      }
+      guideModal.classList.remove('hidden');
+    };
+    const closeGuide = () => {
+      guideModal.classList.add('hidden');
+      if (pausedByGuide) {
+        this.state.paused = false;
+        pausedByGuide = false;
+      }
+    };
+    document.getElementById('btn-open-guide').addEventListener('click', openGuide);
+    document.getElementById('hud-help-btn').addEventListener('click', openGuide);
+    document.getElementById('btn-close-guide').addEventListener('click', closeGuide);
+
     document.getElementById('hud-sound-btn').addEventListener('click', () => {
       this.state.muted = !this.state.muted;
       brawlAudio.setMuted(this.state.muted);
