@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>寶可夢小行星・大亂鬥 3D 封面海報</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+        }
+      }
+    </script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: radial-gradient(circle at 50% 25%, #7dd3fc 0%, #0284c7 52%, #0f172a 100%);
+        font-family: 'Segoe UI', 'Microsoft JhengHei', system-ui, sans-serif;
+      }
+      #poster-wrap {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      .poster-overlay {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 3.2% 4.5% 2.8%;
+        background:
+          radial-gradient(circle at 50% 62%, transparent 45%, rgba(15, 23, 42, 0.34) 100%),
+          linear-gradient(180deg, rgba(15, 23, 42, 0.42) 0%, transparent 24%, transparent 78%, rgba(15, 23, 42, 0.52) 100%);
+      }
+      .title-block {
+        text-align: center;
+      }
+      .eyebrow {
+        display: inline-block;
+        padding: 5px 18px;
+        border-radius: 99px;
+        background: rgba(255, 255, 255, 0.86);
+        color: #0369a1;
+        font-size: clamp(11px, 1.25vw, 16px);
+        font-weight: 900;
+        letter-spacing: 2.2px;
+        box-shadow: 0 6px 20px rgba(15, 23, 42, 0.28);
+        margin-bottom: 10px;
+      }
+      .main-title {
+        font-size: clamp(32px, 5.2vw, 76px);
+        font-weight: 900;
+        letter-spacing: 2px;
+        line-height: 1.06;
+        background: linear-gradient(180deg, #ffffff 0%, #fef08a 58%, #f59e0b 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        filter: drop-shadow(0 6px 14px rgba(15, 23, 42, 0.65)) drop-shadow(0 0 24px rgba(56, 189, 248, 0.45));
+      }
+      .sub-title {
+        margin-top: 6px;
+        font-size: clamp(13px, 1.55vw, 22px);
+        font-weight: 800;
+        color: #f8fafc;
+        letter-spacing: 3px;
+        text-shadow: 0 2px 10px rgba(15, 23, 42, 0.8);
+      }
+      .bottom-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .city-badges {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .badge-pill {
+        padding: 6px 14px;
+        border-radius: 99px;
+        background: rgba(255, 255, 255, 0.82);
+        backdrop-filter: blur(10px);
+        border: 1.5px solid rgba(255, 255, 255, 0.95);
+        color: #0f172a;
+        font-size: clamp(11px, 1.15vw, 15px);
+        font-weight: 900;
+        box-shadow: 0 6px 18px rgba(15, 23, 42, 0.25);
+      }
+      .tagline {
+        color: #fef08a;
+        font-size: clamp(12px, 1.25vw, 17px);
+        font-weight: 900;
+        text-shadow: 0 2px 10px rgba(15, 23, 42, 0.85);
+      }
+      #btn-export {
+        position: absolute;
+        right: 18px;
+        top: 18px;
+        z-index: 30;
+        padding: 9px 16px;
+        border-radius: 99px;
+        border: 1.5px solid #fff;
+        background: rgba(15, 23, 42, 0.78);
+        color: #fff;
+        font-weight: 800;
+        font-size: 13px;
+        cursor: pointer;
+        backdrop-filter: blur(8px);
+      }
+      #btn-export.hidden { display: none; }
+    </style>
+  </head>
+  <body>
+    <div id="poster-wrap">
+      <button id="btn-export">📸 下載海報 PNG</button>
+      <div class="poster-overlay">
+        <div class="title-block">
+          <div class="eyebrow">3D SURVIVOR SIEGE · 10 HERO SQUAD</div>
+          <h1 class="main-title">寶可夢小行星・大亂鬥</h1>
+          <div class="sub-title">POKÉMON PLANET BRAWL</div>
+        </div>
+        <div class="bottom-bar">
+          <div class="city-badges">
+            <span class="badge-pill">🏙️ 台北 101</span>
+            <span class="badge-pill">⛩️ 京都金閣寺</span>
+            <span class="badge-pill">🥮 上海東方明珠</span>
+          </div>
+          <div class="tagline">6 大 3D 主角集結・攻佔 13 座砲台・釋放煙花奧義</div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      import * as THREE from 'three';
+      import { createPokemonMesh, animatePokemonRun } from '../src/pokemon.js';
+      import { buildTaipeiLandmarks, buildKyotoLandmarks, buildShanghaiLandmarks } from '../src/landmarks.js';
+      import { createStorybookGrassTexture, createContactShadowTexture } from '../src/textures.js';
+
+      const wrap = document.getElementById('poster-wrap');
+      const scene = new THREE.Scene();
+
+      // Cinematic sky gradient dome
+      const skyGeo = new THREE.SphereGeometry(220, 32, 24);
+      const skyCanvas = document.createElement('canvas');
+      skyCanvas.width = 2;
+      skyCanvas.height = 512;
+      const sctx = skyCanvas.getContext('2d');
+      const grad = sctx.createLinearGradient(0, 0, 0, 512);
+      grad.addColorStop(0.0, '#0c4a6e');
+      grad.addColorStop(0.32, '#0284c7');
+      grad.addColorStop(0.58, '#38bdf8');
+      grad.addColorStop(0.76, '#bae6fd');
+      grad.addColorStop(0.92, '#fef08a');
+      grad.addColorStop(1.0, '#fb923c');
+      sctx.fillStyle = grad;
+      sctx.fillRect(0, 0, 2, 512);
+      const skyTex = new THREE.CanvasTexture(skyCanvas);
+      skyTex.colorSpace = THREE.SRGBColorSpace;
+      scene.add(new THREE.Mesh(skyGeo, new THREE.MeshBasicMaterial({ map: skyTex, side: THREE.BackSide })));
+
+      if (location.search.includes('clean=1')) {
+        document.getElementById('btn-export').classList.add('hidden');
+      }
+
+      const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 400);
+      camera.position.set(0, 24.2, 23.2);
+      camera.lookAt(0, 19.3, -1.2);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.12;
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      wrap.insertBefore(renderer.domElement, wrap.firstChild);
+
+      // Cinematic 3-point + Rim lighting
+      scene.add(new THREE.HemisphereLight(0xe0f2fe, 0x3f6212, 1.05));
+
+      const sun = new THREE.DirectionalLight(0xfff4d6, 1.85);
+      sun.position.set(16, 38, 22);
+      sun.castShadow = true;
+      sun.shadow.mapSize.set(2048, 2048);
+      sun.shadow.camera.left = -22;
+      sun.shadow.camera.right = 22;
+      sun.shadow.camera.top = 22;
+      sun.shadow.camera.bottom = -22;
+      scene.add(sun);
+
+      const rimLight = new THREE.DirectionalLight(0x38bdf8, 1.15);
+      rimLight.position.set(-18, 26, -18);
+      scene.add(rimLight);
+
+      const warmAccent = new THREE.PointLight(0xfbbf24, 1.6, 35);
+      warmAccent.position.set(0, 23, 6);
+      scene.add(warmAccent);
+
+      // Curved 3D Storybook Mini-Planet Stage (radius = 18)
+      const R = 18;
+      const grassTex = createStorybookGrassTexture('#5ea832');
+      grassTex.wrapS = grassTex.wrapT = THREE.RepeatWrapping;
+      grassTex.repeat.set(8, 8);
+      const planet = new THREE.Mesh(
+        new THREE.SphereGeometry(R, 64, 48),
+        new THREE.MeshStandardMaterial({ map: grassTex, roughness: 0.72, metalness: 0.05 })
+      );
+      planet.receiveShadow = true;
+      scene.add(planet);
+
+      // Helper to place objects cleanly by (x, z) on the upper hemisphere of the globe
+      const contactTex = createContactShadowTexture();
+      function placeOnTopGlobe(obj, x, z, heightOffset = 0, yawRad = 0) {
+        const y = Math.sqrt(Math.max(1, R * R - x * x - z * z));
+        const normal = new THREE.Vector3(x, y, z).normalize();
+        obj.position.copy(normal).multiplyScalar(R + heightOffset);
+        const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
+        obj.quaternion.copy(q);
+        obj.rotateY(yawRad);
+        scene.add(obj);
+        return normal;
+      }
+
+      // Place iconic landmarks from ALL 3 CITIES cleanly along the curved horizon behind the squad!
+      const taipei = buildTaipeiLandmarks();
+      const kyoto = buildKyotoLandmarks();
+      const shanghai = buildShanghaiLandmarks();
+
+      const pickLandmark = (list, idx) => {
+        const item = list[Math.min(idx, list.length - 1)];
+        const grp = item.group;
+        grp.traverse((c) => {
+          if (c.isSprite) c.visible = false;
+          if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; }
+        });
+        return grp;
+      };
+
+      const lmTaipei = pickLandmark(taipei, 0); // Taipei 101 (Back Left)
+      lmTaipei.scale.setScalar(0.58);
+      placeOnTopGlobe(lmTaipei, -7.8, -4.6, 0.0, 0.25);
+
+      const lmKyoto = pickLandmark(kyoto, 0); // Kyoto Landmark (Back Center)
+      lmKyoto.scale.setScalar(0.68);
+      placeOnTopGlobe(lmKyoto, 0, -5.8, 0.0, 0);
+
+      const lmShanghai = pickLandmark(shanghai, 0); // Oriental Pearl Tower (Back Right)
+      lmShanghai.scale.setScalar(0.58);
+      placeOnTopGlobe(lmShanghai, 7.8, -4.6, 0.0, -0.25);
+
+      // Add 3D Fireworks bursting cleanly in the upper-side sky!
+      function addFireworkBurst(x, y, z, color1, color2) {
+        const g = new THREE.Group();
+        g.position.set(x, y, z);
+        const ring = new THREE.Mesh(
+          new THREE.RingGeometry(1.0, 1.35, 28),
+          new THREE.MeshBasicMaterial({ color: color1, side: THREE.DoubleSide, transparent: true, opacity: 0.82 })
+        );
+        ring.lookAt(camera.position);
+        g.add(ring);
+
+        for (let i = 0; i < 20; i++) {
+          const ang = (i / 20) * Math.PI * 2;
+          const r = 1.5 + (i % 3) * 0.7;
+          const spark = new THREE.Mesh(
+            new THREE.OctahedronGeometry(0.19, 0),
+            new THREE.MeshBasicMaterial({ color: i % 2 === 0 ? color1 : color2 })
+          );
+          spark.position.set(Math.cos(ang) * r, Math.sin(ang) * r, (Math.random() - 0.5) * 1.0);
+          g.add(spark);
+        }
+        scene.add(g);
+      }
+      addFireworkBurst(-9.5, 23.8, -9.5, 0xfacc15, 0x34d399);
+      addFireworkBurst(9.5, 23.8, -9.5, 0x38bdf8, 0xf43f5e);
+
+      // Fluffy 3D clouds in upper sky
+      const cloudMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 });
+      [[-13.5, 22.8, -12], [13.5, 22.8, -12], [-5.5, 25.5, -16], [5.5, 25.5, -16]].forEach(([x, y, z]) => {
+        const cg = new THREE.Group();
+        [[-0.9, 0, 0, 0.9], [0, 0.35, 0, 1.2], [0.95, 0.05, 0, 0.85]].forEach(([cx, cy, cz, cr]) => {
+          const puff = new THREE.Mesh(new THREE.SphereGeometry(cr, 14, 12), cloudMat);
+          puff.position.set(cx, cy, cz);
+          cg.add(puff);
+        });
+        cg.position.set(x, y, z);
+        scene.add(cg);
+      });
+
+      // ALL 6 3D POKEMON HEROES — Clearly separated in heroic foreground V-formation, ZERO occlusion!
+      const heroConfigs = [
+        { species: 'pikachu',    x:  0.0, z: 4.8, scale: 1.38, yOff: 0.15, yaw:  0.00 }, // Center Front Star
+        { species: 'charmander', x: -3.1, z: 3.9, scale: 1.26, yOff: 0.00, yaw:  0.22 }, // Front Left
+        { species: 'squirtle',   x:  3.1, z: 3.9, scale: 1.26, yOff: 0.00, yaw: -0.22 }, // Front Right
+        { species: 'bulbasaur',  x: -6.1, z: 2.3, scale: 1.24, yOff: 0.00, yaw:  0.34 }, // Wing Left
+        { species: 'falinks',    x:  6.1, z: 2.3, scale: 1.24, yOff: 0.00, yaw: -0.34 }, // Wing Right (Eevee)
+        { species: 'gengar',     x:  0.0, z: 0.6, scale: 1.32, yOff: 2.35, yaw:  0.00 }  // Hovering Above-Back
+      ];
+
+      heroConfigs.forEach((h, idx) => {
+        const mesh = createPokemonMesh(h.species, false, h.scale);
+        mesh.traverse((c) => {
+          if (c.isSprite) c.visible = false; // Keep poster 100% free of floating badges
+        });
+        placeOnTopGlobe(mesh, h.x, h.z, h.yOff, h.yaw);
+        animatePokemonRun(mesh, 1.2 + idx * 0.65, idx * 0.5, h.species === 'pikachu' || h.species === 'falinks', true);
+      });
+
+      // Glowing Cyan Orbiting Energy Swords + Visible Range Ring around the Squad!
+      const rangeRing = new THREE.Mesh(
+        new THREE.RingGeometry(5.6, 6.0, 64),
+        new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide, transparent: true, opacity: 0.58 })
+      );
+      rangeRing.rotation.x = -Math.PI / 2;
+      rangeRing.position.set(0, R + 0.14, 2.2);
+      scene.add(rangeRing);
+
+      const bladeMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.45, metalness: 0.5, roughness: 0.15 });
+      const goldMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.82, roughness: 0.2 });
+      const edgeMat = new THREE.MeshBasicMaterial({ color: 0xe0f2fe });
+
+      function createHeroSword() {
+        const g = new THREE.Group();
+        const blade = new THREE.Mesh(new THREE.ConeGeometry(0.24, 1.65, 4), bladeMat);
+        blade.rotation.x = Math.PI / 2;
+        blade.position.z = 0.65;
+        g.add(blade);
+        const spine = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.14, 1.4), edgeMat);
+        spine.position.z = 0.48;
+        g.add(spine);
+        const guard = new THREE.Mesh(new THREE.BoxGeometry(0.84, 0.13, 0.2), goldMat);
+        guard.position.z = -0.15;
+        g.add(guard);
+        return g;
+      }
+
+      [[-4.8, R + 1.5, 5.2, 0.65], [4.8, R + 1.5, 5.2, -0.65]].forEach(([x, y, z, ry]) => {
+        const sw = createHeroSword();
+        sw.position.set(x, y, z);
+        sw.rotation.set(-0.2, ry, 0.15);
+        sw.scale.setScalar(1.1);
+        scene.add(sw);
+      });
+
+      // Foreground 3D Faceted Gems & Dual-Ring Magic Essence Orbs!
+      function addPosterGem(x, z, hex, isEssence = false) {
+        const root = new THREE.Group();
+        const sh = new THREE.Mesh(
+          new THREE.CircleGeometry(0.75, 18),
+          new THREE.MeshBasicMaterial({ map: contactTex, transparent: true, opacity: 0.65, depthWrite: false })
+        );
+        sh.rotation.x = -Math.PI / 2;
+        sh.position.y = 0.05;
+        root.add(sh);
+
+        if (isEssence) {
+          const orb = new THREE.Mesh(
+            new THREE.DodecahedronGeometry(0.42, 0),
+            new THREE.MeshPhongMaterial({ color: hex, emissive: hex, emissiveIntensity: 0.15, specular: 0xffffff, shininess: 140, flatShading: true })
+          );
+          orb.position.y = 0.9;
+          root.add(orb);
+          const r1 = new THREE.Mesh(new THREE.TorusGeometry(0.68, 0.075, 12, 24), new THREE.MeshStandardMaterial({ color: 0xf8fafc, metalness: 0.85, roughness: 0.18 }));
+          r1.position.y = 0.9;
+          r1.rotation.set(0.9, 0.4, 0);
+          root.add(r1);
+          const r2 = new THREE.Mesh(new THREE.TorusGeometry(0.52, 0.055, 10, 20), new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8, roughness: 0.25 }));
+          r2.position.y = 0.9;
+          r2.rotation.set(-0.4, 1.0, 0.5);
+          root.add(r2);
+        } else {
+          const gem = new THREE.Mesh(
+            new THREE.OctahedronGeometry(0.55, 0),
+            new THREE.MeshStandardMaterial({ color: hex, emissive: hex, emissiveIntensity: 0.3, metalness: 0.5, roughness: 0.12, flatShading: true })
+          );
+          gem.scale.set(0.88, 1.3, 0.88);
+          gem.position.y = 0.85;
+          root.add(gem);
+        }
+        placeOnTopGlobe(root, x, z, 0.02, 0.4);
+      }
+
+      addPosterGem(-4.5, 6.2, 0x22c55e, true);  // Green Essence
+      addPosterGem( 4.5, 6.2, 0xf97316, true);  // Orange Essence
+      addPosterGem(-1.8, 6.6, 0x38bdf8, false); // Blue Crystal Gem
+      addPosterGem( 1.8, 6.6, 0xfacc15, false); // Gold MaxHP Gem
+
+      // Render cleanly
+      renderer.render(scene, camera);
+
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.render(scene, camera);
+      });
+
+      document.getElementById('btn-export').addEventListener('click', () => {
+        const a = document.createElement('a');
+        a.download = 'pokemon-planet-brawl-cover.png';
+        a.href = renderer.domElement.toDataURL('image/png');
+        a.click();
+      });
+    </script>
+  </body>
+</html>
