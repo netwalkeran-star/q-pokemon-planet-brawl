@@ -65,6 +65,13 @@
       </div>
 
       <div class="hud-zone hud-zone-right">
+        <button class="hud-item icon-btn" id="hud-help-btn" title="遊戲玩法介紹">
+          <svg class="hud-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </button>
         <button class="hud-item icon-btn" id="hud-fullscreen-btn" title="切換全螢幕">
           <svg class="hud-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
@@ -221,12 +228,42 @@
           </div>
         </div>
 
-        <button id="btn-start-brawl" class="btn-primary-glass">
-          <span>開始攻城大亂鬥</span>
-          <svg class="btn-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M5 12h14M13 5l7 7-7 7"/>
-          </svg>
-        </button>
+        <div class="start-btn-row">
+          <button id="btn-open-guide" class="btn-secondary-glass">📖 玩法介紹</button>
+          <button id="btn-start-brawl" class="btn-primary-glass" style="margin-top:0;">
+            <span>開始攻城大亂鬥</span>
+            <svg class="btn-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h14M13 5l7 7-7 7"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- In-Game Gameplay Guide Modal -->
+    <div id="guide-modal" class="modal-overlay hidden">
+      <div class="modal-card glass-card guide-card">
+        <div class="hero-badge">HOW TO PLAY · 遊戲玩法介紹</div>
+        <h2 class="start-hero-title">寶可夢小行星・攻城大亂鬥指南</h2>
+        <div class="guide-list">
+          <div class="guide-item">
+            <b>🏰 1. 時間讀條攻佔 13 座建築</b>
+            <p>走進紫色未攻佔建築光環內讀條（台北 8s / 京都 11s / 上海 14s），進度達 50% 會出現🦍猩猩隊長，100% 即放煙花並轉為我方自動砲台！攻佔全部 13 座即過關。</p>
+          </div>
+          <div class="guide-item">
+            <b>🐾 2. 100 HP ＝ 10 隻寶可夢連線</b>
+            <p>每扣 10 點血隊尾消失 1 隻；踩 ❤️紅蓮寶石 補回隊友，踩 👑黃金特殊寶石 可突破隊伍上限（三關上限 12 → 14 → 16 隻）。</p>
+          </div>
+          <div class="guide-item">
+            <b>⚔️ 3. 單一 3D 武器 ＆ 12 秒限時精華</b>
+            <p>同時裝備 1 種 3D 武器（迴旋刃 / 雷羽鏢 / 震地波 / 星能砲），拾獲新武器會暫停詢問是否更換，<b>更換完整繼承火力、攻速與階級比例</b>！地上精華（🟢階級 / 🔵攻速 / 🟠火力）12 秒後會消失。</p>
+          </div>
+          <div class="guide-item">
+            <b>🕹️ 4. 操作與奧義指引</b>
+            <p>電腦 <code>WASD</code> 移動、滑鼠拖曳旋轉／滾輪縮放、<code>Shift</code> 無敵衝刺、<code>Space</code> 釋放奧義大震波＋顯示 8 秒金色 3D 箭頭指引最近未攻佔建築；手機／iPad 使用左下 1.5X 搖桿與單指旋轉／雙指縮放。</p>
+          </div>
+        </div>
+        <button id="btn-close-guide" class="btn-primary-glass">我知道了，回到戰場</button>
       </div>
     </div>
 
