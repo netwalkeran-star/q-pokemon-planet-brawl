@@ -471,6 +471,87 @@ body, html {
   flex: 1.2;
 }
 
+.start-btn-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.start-btn-row .btn-secondary-glass {
+  flex: 0.85;
+}
+
+.start-btn-row .btn-primary-glass {
+  flex: 1.4;
+}
+
+.guide-card {
+  width: min(560px, 94vw);
+  text-align: left;
+}
+
+.guide-card .hero-badge,
+.guide-card .start-hero-title {
+  text-align: center;
+  display: block;
+}
+
+.guide-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin: 12px 0 14px;
+}
+
+.guide-item {
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 14px;
+  padding: 9px 12px;
+}
+
+.guide-item b {
+  display: block;
+  font-size: 13px;
+  font-weight: 900;
+  color: #0f172a;
+  margin-bottom: 3px;
+}
+
+.guide-item p {
+  font-size: 12px;
+  line-height: 1.45;
+  color: #334155;
+}
+
+.guide-item code {
+  background: rgba(15, 23, 42, 0.08);
+  padding: 1px 5px;
+  border-radius: 5px;
+  font-weight: 800;
+  font-size: 11px;
+}
+
+@media (max-height: 560px) and (orientation: landscape) {
+  .guide-card {
+    width: min(760px, 95vw);
+  }
+  .guide-list {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 7px;
+    margin: 8px 0 10px;
+  }
+  .guide-item {
+    padding: 7px 10px;
+  }
+  .guide-item b {
+    font-size: 12px;
+  }
+  .guide-item p {
+    font-size: 11px;
+  }
+}
+
 /* ============================================================================
    PC BOTTOM-RIGHT PURE WHITE SVG FROSTED-GLASS DOCK
    ============================================================================ */
